@@ -18,6 +18,7 @@ public:
 	void leapInput(const Leap::Frame& frame) override;
 	void mouseButton(int button, int action, int mods) override;
 	void mouseMotion(double x, double y) override;
+	void mouseScroll(double x, double y) override;
 
 private:
 	enum Input
@@ -38,6 +39,7 @@ private:
 		std::chrono::high_resolution_clock::time_point stop_time;
 		float threshold;
 		gl::Vec3 color;
+		Polyline trace;
 		Input input;
 		int illuminated;
 	};
@@ -47,6 +49,8 @@ private:
 	gl::Draw drawing_;
 	Trial trial_;
 	gl::Vec3 cursor_;
+	gl::Box bounds_;
+	gl::Viewport viewport_;
 	Polyline polyline_;
 	std::vector<float> thresholds_;
 	const int trials_per_threshold_;
@@ -54,6 +58,7 @@ private:
 	const int trials_total_;
 	int trials_completed_;
 	bool trial_in_progress_;
+	bool mouse_drag_l_;
 
 	void startTrial();
 	void stopTrial();

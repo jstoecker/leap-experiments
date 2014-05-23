@@ -10,26 +10,29 @@ using namespace std::chrono;
 using namespace Leap;
 
 CursorExperiment::CursorExperiment() :
-	thresholds_{ { 5.0f, 2.5f, 1.0f } },
-	trials_per_threshold_(2),
-	trials_per_input_(trials_per_threshold_ * trials_per_input_),
+	bounds_(1.25f),
+	thresholds_{ { 0.1f, 0.05f, 0.025f } },
+	trials_per_threshold_(1),
+	trials_per_input_(trials_per_threshold_ * thresholds_.size()),
 	trials_total_(num_inputs * trials_per_input_),
 	trials_completed_(0),
-	trial_in_progress_(false)
+	trial_in_progress_(false),
+	mouse_drag_l_(false)
 {
-	cam_control_.rotationAllowed(true);
+	cam_control_.rotationAllowed(false);
 	cam_control_.zoomAllowed(false);
 	cam_control_.translationAllowed(false);
 	cam_control_.camera().radius(1.8f);
 	createTrial();
 
-	static const int num_points = 16;
+	static const int num_points = 128;
 	float angle = 0.0f;
 	float angle_step = two_pi / num_points;
 	for (int i = 0; i < num_points; i++) {
-		float x = cos(angle) * .5f;
-		float y = sin(angle) * .5f;
+		float x = cos(angle) * .5f + sin(angle*12) * 0.025f;
+		float y = sin(angle) * .5f + cos(angle * 12) * 0.025f;
 		float z = 0.0f;
+		z = .025f * sin(angle*12);
 		polyline_.points.push_back({ x, y, z });
 		angle += angle_step;
 	}
@@ -58,17 +61,19 @@ void CursorExperiment::update()
 
 bool CursorExperiment::withinThreshold()
 {
-	return (cursor_ - polyline_.points[trial_.illuminated]).length() < 0.1f;
+	return (cursor_ - polyline_.points[trial_.illuminated]).length() < trial_.threshold;
 }
 
 void CursorExperiment::startTrial()
 {
+	cursor_.set(0.0f, 0.0f, 0.0f);
 	trial_in_progress_ = true;
 	trial_.start_time = high_resolution_clock::now();
 }
 
 void CursorExperiment::stopTrial()
 {
+	cursor_.set(0.0f, 0.0f, 0.0f);
 	trial_.stop_time = high_resolution_clock::now();
 	trial_in_progress_ = false;
 	saveTrial();
@@ -81,7 +86,7 @@ void CursorExperiment::stopTrial()
 void CursorExperiment::illuminatePoint()
 {
 	if (trial_.illuminated < polyline_.points.size()) {
-
+		trial_.trace.points.push_back(cursor_);
 		trial_.illuminated++;
 	}
 }
@@ -89,30 +94,32 @@ void CursorExperiment::illuminatePoint()
 void CursorExperiment::saveTrial()
 {
 	milliseconds elapsed = duration_cast<milliseconds>(trial_.stop_time - trial_.start_time);
-	//const Vec3& t = trial_.target;
 
 	cout << "exp trial   : " << (trials_completed_ + 1) << endl;
 	cout << "input trial : " << (trials_completed_ % trials_per_input_ + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
-	//cout << "target      : " << t.x << ", " << t.y << ", " << t.z << endl;
 	cout << "time (ms)   : " << elapsed.count() << endl;
+	cout << "trace       : " << trial_.trace.points.size() << endl;
+	for (const Vec3& v : trial_.trace.points) {
+		cout << v.x << ", " << v.y << ", " << v.z << endl;
+	}
 	cout << endl;
 }
 
 void CursorExperiment::createTrial()
 {
-	float yaw = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 60.0 * deg_to_rad;
+	float yaw = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 45 * deg_to_rad;
 	float pitch = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 45.0f * deg_to_rad;
 
 	Camera& camera = cam_control_.camera();
-	camera.yaw(yaw);
+	camera.yaw(33.0f * deg_to_rad);
 	camera.pitch(pitch);
 
+	trial_.trace.points.clear();
 	trial_.color = Vec3::random() + Vec3(0.25f);
 	trial_.threshold = thresholds_[(trials_completed_ % trials_per_input_) / trials_per_threshold_];
 	trial_.input = (Input)(trials_completed_ / trials_per_input_);
-	trial_.input = leap;
 	trial_.illuminated = 0;
 }
 
@@ -131,7 +138,7 @@ void CursorExperiment::leapInput(const Leap::Frame& frame)
 
 			const Mat4& eye2world = cam_control_.camera().viewInverse();
 			Vec4 hand_delta_ws = eye2world * pose_.handPositionDelta().toVector4<Vec4>();
-			cursor_ = Box(1.5f).clamp(cursor_ + hand_delta_ws / 200.0f);
+			cursor_ = bounds_.clamp(cursor_ + hand_delta_ws / 200.0f);
 
 			if (trial_.illuminated < polyline_.points.size() && withinThreshold()) {
 				illuminatePoint();
@@ -155,11 +162,15 @@ void CursorExperiment::mouseButton(int button, int action, int mods)
 
 	cam_control_.mouseButton(button, action, mods);
 
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		mouse_drag_l_ = action == GLFW_PRESS;
+	}
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !trial_in_progress_) {
 		startTrial();
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && withinThreshold()) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE &&  trial_.illuminated == polyline_.points.size()) {
 		stopTrial();
 	}
 }
@@ -170,12 +181,52 @@ void CursorExperiment::mouseMotion(double x, double y)
 		return;
 	}
 
-	cam_control_.mouseMotion(x, y);
+	if (mouse_drag_l_) {
+		// unproject, change X/Y coords to match mouse on screen
+		Vec4 cursor_ndc = cam_control_.camera().projection() * cam_control_.camera().view() * Vec4(cursor_, 1.0f);
+		cursor_ndc /= cursor_ndc.w;
+		cursor_ndc.x = (x / viewport_.width - 0.5f) * 2.0f;
+		cursor_ndc.y = -(y / viewport_.height - 0.5f) * 2.0f;
+
+		// reproject
+		Vec4 cursor_ws = cam_control_.camera().viewInverse() * cam_control_.camera().projection().inverse() * cursor_ndc;
+		cursor_ws /= cursor_ws.w;
+		cursor_ = cursor_ws;
+
+		if (trial_.illuminated < polyline_.points.size() && withinThreshold()) {
+			illuminatePoint();
+		}
+	}
+}
+
+void CursorExperiment::mouseScroll(double x, double y)
+{
+	if (trial_.input != mouse) {
+		return;
+	}
+
+	if (mouse_drag_l_) {
+		// unproject, change Z
+		Vec4 cursor_ndc = cam_control_.camera().projection() * cam_control_.camera().view() * Vec4(cursor_, 1.0f);
+		cursor_ndc /= cursor_ndc.w;
+		cursor_ndc.z += y / 500.0f;
+
+		// reproject
+		Vec4 cursor_ws = cam_control_.camera().viewInverse() * cam_control_.camera().projection().inverse() * cursor_ndc;
+		cursor_ws /= cursor_ws.w;
+		cursor_ = cursor_ws;
+
+		if (trial_.illuminated < polyline_.points.size() && withinThreshold()) {
+			illuminatePoint();
+		}
+	}
 }
 
 
 void CursorExperiment::draw(const gl::Viewport& viewport)
 {
+	viewport_ = viewport;
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	Camera& camera = cam_control_.camera();
