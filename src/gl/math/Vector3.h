@@ -294,12 +294,7 @@ namespace gl
 		// Prints the vector to an output stream.
 		friend std::ostream& operator<<(std::ostream& os, const Vector3<T>& v)
 		{
-			os << std::fixed;
-			os << std::setprecision(3);
-			os << "(";
-			os << std::setw(10) << v.x << " ";
-			os << std::setw(10) << v.y << " ";
-			os << std::setw(10) << v.z << ")";
+            os << v.x << ", " << v.y << ", " << v.z;
 			return os;
 		}
 	};

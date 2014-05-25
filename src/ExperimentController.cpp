@@ -3,12 +3,13 @@
 #include "experiments/RotationExperiment.h"
 #include "experiments/CursorExperiment.h"
 #include "experiments/PoseExperiment.h"
+#include "experiments/Clip3DExperiment.h"
+#include "experiments/MaskExperiment.h"
 
 using namespace gl;
 
 ExperimentController::ExperimentController()
 {
-	srand(time(NULL));
 }
 
 void ExperimentController::init()
@@ -22,12 +23,13 @@ void ExperimentController::init()
 
     //experiments_.emplace_back(new PoseExperiment(1));
     
-    std::vector<float> rot_threhsolds = { 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad };
-    rot_threhsolds = {5.0f * deg_to_rad};
-	experiments_.emplace_back(new RotationExperiment(rot_threhsolds, 1));
+//	experiments_.emplace_back(new RotationExperiment({ 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad }, 1));
 
-    std::vector<float> cursor_thresholds = { 0.1f, 0.05f, 0.025f };
-    experiments_.emplace_back(new CursorExperiment(cursor_thresholds, 1));
+//    experiments_.emplace_back(new CursorExperiment({ 0.1f, 0.05f, 0.025f }, 1));
+    
+    //experiments_.emplace_back(new Clip3DExperiment({0.2f, 0.15f, 0.10f}, 5));
+    
+    experiments_.emplace_back(new MaskExperiment(15, 1));
     
 	experiment_ = experiments_.begin();
 	(*experiment_)->start();

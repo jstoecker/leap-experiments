@@ -31,11 +31,10 @@ bool RotationExperiment::withinThreshold()
 
 void RotationExperiment::saveTrial()
 {
-	const Vec3& t = trial_.target;
 	cout << "trial       : " << (trialsCompleted() + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
-	cout << "target      : " << t.x << ", " << t.y << ", " << t.z << endl;
+	cout << "target      : " << trial_.target << endl;
 	cout << "time (ms)   : " << trialTime().count() << endl;
 }
 

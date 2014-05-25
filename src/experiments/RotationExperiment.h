@@ -2,7 +2,7 @@
 #define __LEAP_EXPERIMENTS_ROTATION_H__
 
 #include "Experiment.h"
-#include "CameraControl.h"
+#include "util/CameraControl.h"
 #include "gl/util/Draw.h"
 
 class RotationExperiment : public Experiment

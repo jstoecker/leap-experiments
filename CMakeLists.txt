@@ -13,6 +13,8 @@ endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
 set(DATA_SHADERS
     shaders/color.vert
     shaders/color.frag
+    shaders/mask_volume.vert
+    shaders/mask_volume.frag
 )
 
 set(DATA_FONTS
@@ -47,6 +49,8 @@ file(GLOB SOURCE_POSES src/poses/*.cpp src/poses/*.h)
 source_group("poses" FILES ${SOURCE_POSES})
 file(GLOB SOURCE_EXPERIMENTS src/experiments/*.cpp src/experiments/*.h)
 source_group("experiments" FILES ${SOURCE_EXPERIMENTS})
+file(GLOB SOURCE_UTIL src/util/*.cpp src/util/*.h)
+source_group("util" FILES ${SOURCE_UTIL})
 
 set(SOURCE_AND_RESOURCES
     ${SOURCE_MAIN}
@@ -56,6 +60,7 @@ set(SOURCE_AND_RESOURCES
     ${SOURCE_GL_MATH}
     ${SOURCE_POSES}
     ${SOURCE_EXPERIMENTS}
+    ${SOURCE_UTIL}
     ${DATA_SHADERS}
     ${DATA_FONTS}
 )

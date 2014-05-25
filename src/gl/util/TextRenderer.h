@@ -112,7 +112,6 @@ private:
 	gl::Buffer vbo_;
     std::map<std::string, Font*> fonts;
     Font* font_;
-    int windowWidth, windowHeight;
 	bool dirty_;
 	GLsizei vertex_count_;
     

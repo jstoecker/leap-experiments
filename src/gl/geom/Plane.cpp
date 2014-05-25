@@ -2,6 +2,10 @@
 
 using namespace gl;
 
+Plane::Plane() : normal_(0.0f, 1.0f, 0.0f), dist_origin_(0.0f)
+{
+}
+
 Plane::Plane(const Vec3& normal, float dist_from_origin) :
 	normal_(normal),
 	dist_origin_(dist_from_origin)
@@ -37,6 +41,11 @@ float Plane::distFromOrigin() const
 void Plane::distFromOrigin(float dist)
 {
 	dist_origin_ = dist;
+}
+
+void Plane::point(const Vec3& point)
+{
+	dist_origin_ = normal_.dot(point);
 }
 
 
@@ -78,4 +87,13 @@ Geometry Plane::triangles(unsigned u_segments, unsigned v_segments)
 	}
 
 	return g;
+}
+
+Vec3 Plane::intersect(const gl::Vec3& point, const gl::Vec3& direction)
+{
+    float nDotD = normal_.dot(direction);
+    
+    Vec3 plane_point = normal_ * dist_origin_;
+    
+    return point + direction * (-normal_.dot(point - plane_point) / nDotD);
 }

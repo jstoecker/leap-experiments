@@ -9,6 +9,9 @@ namespace gl
     class Plane
     {
 	public:
+        /// Plane with normal 0,1,0 and distance from origin 0
+        Plane();
+        
 		/** Creates a plane with unit-length normal and distance from origin */
 		Plane(const Vec3& normal, float dist_from_origin);
 
@@ -30,9 +33,14 @@ namespace gl
 		/** Sets distance from origin */
 		void distFromOrigin(float dist);
 
+        
+		/** Sets point on the plane */
+		void point(const Vec3& point);
+        
 		/** Creates a triangulated surface centered at the point nearest to the plane's surface. */
 		Geometry triangles(unsigned u_segments, unsigned v_segments);
 
+        gl::Vec3 intersect(const gl::Vec3& point, const gl::Vec3& direction);
 
 	private:
 		Vec3 normal_;

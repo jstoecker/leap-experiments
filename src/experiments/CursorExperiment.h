@@ -2,7 +2,7 @@
 #define __LEAP_EXPERIMENTS_CURSOR_H__
 
 #include "Experiment.h"
-#include "CameraControl.h"
+#include "util/CameraControl.h"
 #include "gl/util/Draw.h"
 #include "poses/VPose.h"
 

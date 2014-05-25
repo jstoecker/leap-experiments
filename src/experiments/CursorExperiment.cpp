@@ -57,7 +57,7 @@ void CursorExperiment::saveTrial()
 	cout << "time (ms)   : " << trialTime().count() << endl;
 	cout << "trace       : " << trial_.trace.points.size() << endl;
 	for (const Vec3& v : trial_.trace.points) {
-		cout << v.x << ", " << v.y << ", " << v.z << endl;
+        cout << v << endl;
 	}
 }
 

@@ -54,7 +54,7 @@ GLFWwindow* initGL(int width, int height, const char* title)
 	}
 	glfwMakeContextCurrent(window);
 
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();

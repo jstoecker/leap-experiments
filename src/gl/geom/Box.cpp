@@ -122,20 +122,20 @@ Vec3 Box::clamp(const Vec3& p) const
 std::vector<Vec3> Box::intersect(const Plane& plane) const
 {
 	std::vector<Vec3> vertices;
-
+    
 	Vec3 n = plane.normal();
 	Vec3 p = plane.nearestToOrigin();
-
+    
 	// to avoid duplicate vertices at corners, only the first vertex that
 	// intersects a corner vertex i will be added (i.e. corners[i] == false)
 	bool corners[] = { false, false, false, false, false, false, false, false };
-
+    
 	// find intersections of the plane with all edges
 	for (const Box::Edge& e : edges_) {
 		const Vec3& a = vertices_[e.first];
 		const Vec3& b = vertices_[e.second];
 		Vec3 d = b - a;
-
+        
 		// if n * d == 0, the edge lies on the plane (ignore it)
 		GLfloat nDotD = n.dot(d);
 		if (nDotD != 0) {
@@ -156,7 +156,7 @@ std::vector<Vec3> Box::intersect(const Plane& plane) const
 			}
 		}
 	}
-
+    
 	// x and y are random orthogonal vectors in the plane
 	Vec3 x = Vec3::random().cross(n).normalize();
 	Vec3 y = n.cross(x);
@@ -164,12 +164,12 @@ std::vector<Vec3> Box::intersect(const Plane& plane) const
 		float s = (y.cross(v)).dot(n);
 		return (v.cross(x).dot(n) >= 0.0f) ? 2.0f - s : s;
 	};
-
+    
 	auto sort_comp = [&](const Vec3& a, const Vec3& b)->bool {
 		return sort_angle(a.normal()) < sort_angle(b.normal());
 	};
-
+    
 	std::sort(vertices.begin(), vertices.end(), sort_comp);
-
+    
 	return vertices;
 }
