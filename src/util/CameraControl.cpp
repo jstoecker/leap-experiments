@@ -11,7 +11,8 @@ CameraControl::CameraControl() :
 	mouse_drag_r_(false),
 	rotation_allowed_(true),
 	translation_allowed_(true),
-	zoom_allowed_(true)
+	zoom_allowed_(true),
+    updated_(true)
 {
 	poses_.fist().enabled(true);
 	poses_.fist().maxHandEngageSpeed(150.0f);
@@ -25,6 +26,7 @@ void CameraControl::bounds(const Box& bounds)
 
 void CameraControl::leapInput(const Frame& frame)
 {
+    updated_ = false;
 	poses_.update(frame);
 	if (poses_.fist().tracking() && poses_.fist().state() == FistPose::State::closed && poses_.fist().hand().confidence() > 0.2f) {
 		leapRotate();
@@ -40,6 +42,7 @@ void CameraControl::leapTranslate()
 		Mat4 eye2world = camera_.view().rotScale().transpose();
 		Vec4 v = Vec4(t.x, t.y, t.z, 0);
 		move(eye2world * -v);
+        updated_ = true;
 	}
 }
 
@@ -60,6 +63,8 @@ void CameraControl::leapRotate()
 		float d_radius = -poses_.fist().handPositionDelta().z / 100.0f * min(1.0f, z_scale * z_scale);
 		zoom(d_radius);
 	}
+    
+    updated_ = true;
 }
 
 void CameraControl::mouseButton(int button, int action, int mods)

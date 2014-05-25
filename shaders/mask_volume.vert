@@ -12,5 +12,5 @@ void main()
 {
     fs_texcoord = (vs_position.xyz - bounds_min) / bounds_size;
     gl_Position = model_view_projection * vs_position;
-	fs_voxel_position_ws = vs_position.xyz;
+	fs_position_ws = vs_position.xyz;
 }

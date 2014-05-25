@@ -22,6 +22,7 @@ public:
 	void mouseScroll(double x, double y);
 	Camera& camera() { return camera_; }
 	PoseTracker& poses() { return poses_; }
+    bool updated() const { return updated_;}
 
 private:
 	Camera camera_;
@@ -34,6 +35,7 @@ private:
 	bool rotation_allowed_;
 	bool translation_allowed_;
 	bool zoom_allowed_;
+    bool updated_;
 
 	void leapRotate();
 	void leapTranslate();

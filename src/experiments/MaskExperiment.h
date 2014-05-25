@@ -6,8 +6,11 @@
 #include "gl/util/Draw.h"
 #include "gl/geom/Box.h"
 #include "gl/Program.h"
+#include "gl/Texture.h"
 #include "gl/Buffer.h"
 #include "util/BoxSlicer.h"
+#include "poses/PoseTracker.h"
+#include "util/BoxMask.h"
 
 class MaskExperiment : public Experiment
 {
@@ -27,12 +30,18 @@ private:
     int threshold_;
     gl::Box bounds_;
     BoxSlicer slicer_;
+    GLsizei slice_indices_;
     gl::Buffer vbo_;
     gl::Buffer ibo_;
+    gl::Texture tex_mask_;
     gl::Program prog_;
-    std::chrono::high_resolution_clock::time_point valid_start_;
+    PoseTracker poses_;
+    BoxMask box_mask_;
     
-	bool withinThreshold();
+    void clearMask();
+    void slice();
+	void applyEdit();
+    void moveCursor();
 };
 
 #endif // __LEAP_EXPERIMENTS_MASK_H__
