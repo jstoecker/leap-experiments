@@ -2,6 +2,7 @@
 #include <sstream>
 #include "experiments/RotationExperiment.h"
 #include "experiments/CursorExperiment.h"
+#include "experiments/PoseExperiment.h"
 
 using namespace gl;
 
@@ -18,13 +19,16 @@ void ExperimentController::init()
 	text_.loadFont("menlo18");
 	text_.hAlign(TextRenderer::HAlign::left);
 	text_.vAlign(TextRenderer::VAlign::bottom);
+
+    //experiments_.emplace_back(new PoseExperiment(1));
     
     std::vector<float> rot_threhsolds = { 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad };
+    rot_threhsolds = {5.0f * deg_to_rad};
 	experiments_.emplace_back(new RotationExperiment(rot_threhsolds, 1));
-    
-    std::vector<float> cursor_thresholds = { 0.1f, 0.05f, 0.025f };
-	experiments_.emplace_back(new CursorExperiment(cursor_thresholds, 1));
 
+    std::vector<float> cursor_thresholds = { 0.1f, 0.05f, 0.025f };
+    experiments_.emplace_back(new CursorExperiment(cursor_thresholds, 1));
+    
 	experiment_ = experiments_.begin();
 	(*experiment_)->start();
 }
@@ -73,6 +77,12 @@ void ExperimentController::draw()
 		text_.clear();
 		text_.viewport(viewport_);
 		text_.add(is.str(), 0.0f, 0.0f);
+        is.str("");
+        is << "Trial: ";
+		is << ((*experiment_)->trialsCompleted() + 1);
+		is << "/";
+		is << (*experiment_)->trialsTotal();
+        text_.add(is.str(), 0.0f, 30.0f);
 		text_.draw();
 	}
 }

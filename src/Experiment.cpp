@@ -20,7 +20,7 @@ bool Experiment::done()
 
 void Experiment::start()
 {
-    std::cout << "Start Experiment: " << name() << std::endl;
+    std::cout << "Experiment: " << name() << std::endl;
     std::cout << "Num Trials: " << trials_total_ << std::endl;
 }
 
@@ -62,6 +62,7 @@ void Experiment::stopTrial()
     if (trial_in_progress_) {
         trial_stop_ = high_resolution_clock::now();
         trial_in_progress_ = false;
+        std::cout << "--------------------------------------------------------------------------------" << std::endl;
         saveTrial();
         if (++trials_completed_ != trials_total_) {
             initTrial();

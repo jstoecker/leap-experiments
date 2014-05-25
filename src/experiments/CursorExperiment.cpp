@@ -52,7 +52,6 @@ void CursorExperiment::illuminatePoint()
 void CursorExperiment::saveTrial()
 {
 	cout << "trial       : " << (trialsCompleted() + 1) << endl;
-	cout << "input trial : " << (trialsCompleted() % trials_per_input_ + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
 	cout << "time (ms)   : " << trialTime().count() << endl;
@@ -60,7 +59,6 @@ void CursorExperiment::saveTrial()
 	for (const Vec3& v : trial_.trace.points) {
 		cout << v.x << ", " << v.y << ", " << v.z << endl;
 	}
-	cout << endl;
 }
 
 void CursorExperiment::initTrial()
