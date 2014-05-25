@@ -8,40 +8,17 @@ using namespace std;
 using namespace std::chrono;
 using namespace Leap;
 
-RotationExperiment::RotationExperiment() :
-	thresholds_{ { 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad } },
-	trials_per_threshold_(2),
-	trials_per_input_(trials_per_threshold_ * thresholds_.size()),
-	trials_total_(num_inputs * trials_per_input_),
-	trials_completed_(0),
-	trial_in_progress_(false)
+RotationExperiment::RotationExperiment(vector<float> thresholds, int trials_per_threshold) :
+    Experiment(num_inputs * trials_per_threshold * thresholds.size()),
+	thresholds_{thresholds},
+	trials_per_threshold_(trials_per_threshold),
+	trials_per_input_(trials_per_threshold_ * thresholds_.size())
 {
 	cam_control_.rotationAllowed(true);
 	cam_control_.zoomAllowed(false);
 	cam_control_.translationAllowed(false);
 	cam_control_.camera().radius(1.8f);
-	createTrial();
-}
-
-bool RotationExperiment::done()
-{
-	return trials_completed_ == trials_total_;
-}
-
-void RotationExperiment::start()
-{
-	cout << "start experiment" << endl;
-	cout << "trials      : " << trials_total_ << endl;
-	cout << endl;
-}
-
-void RotationExperiment::stop()
-{
-	cout << "stop experiment" << endl;
-}
-
-void RotationExperiment::update()
-{
+	initTrial();
 }
 
 bool RotationExperiment::withinThreshold()
@@ -52,38 +29,20 @@ bool RotationExperiment::withinThreshold()
 	return radians <= trial_.threshold;
 }
 
-void RotationExperiment::startTrial()
-{
-	trial_in_progress_ = true;
-	trial_.start_time = high_resolution_clock::now();
-}
-
-void RotationExperiment::stopTrial()
-{
-	trial_.stop_time = high_resolution_clock::now();
-	trial_in_progress_ = false;
-	saveTrial();
-
-	if (++trials_completed_ != trials_total_) {
-		createTrial();
-	}
-}
-
 void RotationExperiment::saveTrial()
 {
-	milliseconds elapsed = duration_cast<milliseconds>(trial_.stop_time - trial_.start_time);
 	const Vec3& t = trial_.target;
 
-	cout << "exp trial   : " << (trials_completed_ + 1) << endl;
-	cout << "input trial : " << (trials_completed_ % trials_per_input_ + 1) << endl;
+	cout << "trial       : " << (trialsCompleted() + 1) << endl;
+	cout << "input trial : " << (trialsCompleted() % trials_per_input_ + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
 	cout << "target      : " << t.x << ", " << t.y << ", " << t.z << endl;
-	cout << "time (ms)   : " << elapsed.count() << endl;
+	cout << "time (ms)   : " << trialTime().count() << endl;
 	cout << endl;
 }
 
-void RotationExperiment::createTrial()
+void RotationExperiment::initTrial()
 {
 	cam_control_.camera().yaw(0.0f);
 	cam_control_.camera().pitch(0.0f);
@@ -97,8 +56,8 @@ void RotationExperiment::createTrial()
 	trial_.color = Vec3::random() + Vec3(0.25f);
 
 
-	trial_.threshold = thresholds_[(trials_completed_ % trials_per_input_) / trials_per_threshold_];
-	trial_.input = (Input)(trials_completed_ / trials_per_input_);
+	trial_.threshold = thresholds_[(trialsCompleted() % trials_per_input_) / trials_per_threshold_];
+	trial_.input = (Input)(trialsCompleted() / trials_per_input_);
 }
 
 void RotationExperiment::leapInput(const Leap::Frame& frame)
@@ -108,12 +67,11 @@ void RotationExperiment::leapInput(const Leap::Frame& frame)
 	}
 
 	if (cam_control_.poses().fist().tracking()) {
-
-		if (cam_control_.poses().fist().state() == FistPose::State::closed && !trial_in_progress_) {
+		if (cam_control_.poses().fist().state() == FistPose::State::closed && !trialInProgress()) {
 			startTrial();
 		}
 
-		if (cam_control_.poses().fist().state() != FistPose::State::closed && trial_in_progress_ && withinThreshold()) {
+		if (cam_control_.poses().fist().state() != FistPose::State::closed && trialInProgress() && withinThreshold()) {
 			stopTrial();
 		}
 
@@ -130,11 +88,11 @@ void RotationExperiment::mouseButton(int button, int action, int mods)
 
 	cam_control_.mouseButton(button, action, mods);
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !trial_in_progress_) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !trialInProgress()) {
 		startTrial();
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && withinThreshold()) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && trialInProgress() && withinThreshold()) {
 		stopTrial();
 	}
 }
@@ -183,7 +141,7 @@ void RotationExperiment::draw(const gl::Viewport& viewport)
 	drawing_.draw();
 
 	// 2D status circle
-	if (trial_in_progress_) {
+	if (trialInProgress()) {
 		if (withinThreshold()) {
 			drawing_.color(0.25f, 1.0f, 0.25f);
 		} else {

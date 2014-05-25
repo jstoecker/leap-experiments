@@ -3,6 +3,8 @@
 #include "experiments/RotationExperiment.h"
 #include "experiments/CursorExperiment.h"
 
+using namespace gl;
+
 ExperimentController::ExperimentController()
 {
 	srand(time(NULL));
@@ -16,9 +18,12 @@ void ExperimentController::init()
 	text_.loadFont("menlo18");
 	text_.hAlign(TextRenderer::HAlign::left);
 	text_.vAlign(TextRenderer::VAlign::bottom);
-
-	//experiments_.emplace_back(new RotationExperiment);
-	experiments_.emplace_back(new CursorExperiment);
+    
+    std::vector<float> rot_threhsolds = { 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad };
+	experiments_.emplace_back(new RotationExperiment(rot_threhsolds, 1));
+    
+    std::vector<float> cursor_thresholds = { 0.1f, 0.05f, 0.025f };
+	experiments_.emplace_back(new CursorExperiment(cursor_thresholds, 1));
 
 	experiment_ = experiments_.begin();
 	(*experiment_)->start();
@@ -45,7 +50,6 @@ void ExperimentController::update()
 {
 	if (experiment_ != experiments_.end()) {
 		(*experiment_)->leapInput(leap_.frame());
-		(*experiment_)->update();
 		if ((*experiment_)->done()) {
 			startNext();
 		}

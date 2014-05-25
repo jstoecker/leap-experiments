@@ -9,21 +9,19 @@ using namespace std;
 using namespace std::chrono;
 using namespace Leap;
 
-CursorExperiment::CursorExperiment() :
+CursorExperiment::CursorExperiment(vector<float> thresholds, int trials_per_threshold) :
+    Experiment(num_inputs * trials_per_threshold * thresholds_.size()),
 	bounds_(1.25f),
-	thresholds_{ { 0.1f, 0.05f, 0.025f } },
-	trials_per_threshold_(1),
-	trials_per_input_(trials_per_threshold_ * thresholds_.size()),
-	trials_total_(num_inputs * trials_per_input_),
-	trials_completed_(0),
-	trial_in_progress_(false),
+	thresholds_(thresholds),
+	trials_per_threshold_(trials_per_threshold),
+	trials_per_input_(trials_per_threshold * thresholds.size()),
 	mouse_drag_l_(false)
 {
 	cam_control_.rotationAllowed(false);
 	cam_control_.zoomAllowed(false);
 	cam_control_.translationAllowed(false);
 	cam_control_.camera().radius(1.8f);
-	createTrial();
+	initTrial();
 
 	static const int num_points = 128;
 	float angle = 0.0f;
@@ -38,49 +36,9 @@ CursorExperiment::CursorExperiment() :
 	}
 }
 
-bool CursorExperiment::done()
-{
-	return trials_completed_ == trials_total_;
-}
-
-void CursorExperiment::start()
-{
-	cout << "start experiment" << endl;
-	cout << "trials      : " << trials_total_ << endl;
-	cout << endl;
-}
-
-void CursorExperiment::stop()
-{
-	cout << "stop experiment" << endl;
-}
-
-void CursorExperiment::update()
-{
-}
-
 bool CursorExperiment::withinThreshold()
 {
 	return (cursor_ - polyline_.points[trial_.illuminated]).length() < trial_.threshold;
-}
-
-void CursorExperiment::startTrial()
-{
-	cursor_.set(0.0f, 0.0f, 0.0f);
-	trial_in_progress_ = true;
-	trial_.start_time = high_resolution_clock::now();
-}
-
-void CursorExperiment::stopTrial()
-{
-	cursor_.set(0.0f, 0.0f, 0.0f);
-	trial_.stop_time = high_resolution_clock::now();
-	trial_in_progress_ = false;
-	saveTrial();
-
-	if (++trials_completed_ != trials_total_) {
-		createTrial();
-	}
 }
 
 void CursorExperiment::illuminatePoint()
@@ -93,13 +51,11 @@ void CursorExperiment::illuminatePoint()
 
 void CursorExperiment::saveTrial()
 {
-	milliseconds elapsed = duration_cast<milliseconds>(trial_.stop_time - trial_.start_time);
-
-	cout << "exp trial   : " << (trials_completed_ + 1) << endl;
-	cout << "input trial : " << (trials_completed_ % trials_per_input_ + 1) << endl;
+	cout << "trial       : " << (trialsCompleted() + 1) << endl;
+	cout << "input trial : " << (trialsCompleted() % trials_per_input_ + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
-	cout << "time (ms)   : " << elapsed.count() << endl;
+	cout << "time (ms)   : " << trialTime().count() << endl;
 	cout << "trace       : " << trial_.trace.points.size() << endl;
 	for (const Vec3& v : trial_.trace.points) {
 		cout << v.x << ", " << v.y << ", " << v.z << endl;
@@ -107,8 +63,10 @@ void CursorExperiment::saveTrial()
 	cout << endl;
 }
 
-void CursorExperiment::createTrial()
+void CursorExperiment::initTrial()
 {
+    cursor_.set(0.0f, 0.0f, 0.0f);
+
 	float yaw = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 45 * deg_to_rad;
 	float pitch = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 45.0f * deg_to_rad;
 
@@ -117,9 +75,11 @@ void CursorExperiment::createTrial()
 	camera.pitch(pitch);
 
 	trial_.trace.points.clear();
+    trial_.camera_pitch = pitch;
+    trial_.camera_yaw = yaw;
 	trial_.color = Vec3::random() + Vec3(0.25f);
-	trial_.threshold = thresholds_[(trials_completed_ % trials_per_input_) / trials_per_threshold_];
-	trial_.input = (Input)(trials_completed_ / trials_per_input_);
+	trial_.threshold = thresholds_[(trialsCompleted() % trials_per_input_) / trials_per_threshold_];
+	trial_.input = (Input)(trialsCompleted() / trials_per_input_);
 	trial_.illuminated = 0;
 }
 
@@ -132,7 +92,7 @@ void CursorExperiment::leapInput(const Leap::Frame& frame)
 	pose_.update(frame);
 	if (pose_.tracking()) {
 		if (pose_.isClosed()) {
-			if (!trial_in_progress_) {
+			if (!trialInProgress()) {
 				startTrial();
 			}
 
@@ -145,7 +105,7 @@ void CursorExperiment::leapInput(const Leap::Frame& frame)
 			}
 
 		} else {
-			if (trial_in_progress_ && trial_.illuminated == polyline_.points.size()) {
+			if (trialInProgress() && trial_.illuminated == polyline_.points.size()) {
 				stopTrial();
 			}
 		}
@@ -166,7 +126,7 @@ void CursorExperiment::mouseButton(int button, int action, int mods)
 		mouse_drag_l_ = action == GLFW_PRESS;
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !trial_in_progress_) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !trialInProgress()) {
 		startTrial();
 	}
 
