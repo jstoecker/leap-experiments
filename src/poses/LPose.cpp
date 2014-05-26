@@ -3,13 +3,19 @@
 using namespace Leap;
 using namespace std::chrono;
 
+#include "util/ExperimentConfig.h"
+
 LPose::LPose() :
 	closed_(false),
 	last_close_(high_resolution_clock::now()),
 	open_fn_(nullptr),
-	close_fn_(nullptr)
+	close_fn_(nullptr),
+    close_angle_(0.3f)
 {
 	maxHandEngageSpeed(55.0f);
+    
+    ExperimentConfig cfg;
+    closeAngle(cfg.getValue("l-pose close angle", 0.3f));
 }
 
 bool LPose::shouldEngage(const Frame& frame)
@@ -94,7 +100,7 @@ void LPose::track(const Frame& frame)
 
 	bool was_closed = closed_;
 
-	closed_ = (angle <= 0.3f) && fingerMotion() < 300.0f;
+	closed_ = (angle <= close_angle_) && fingerMotion() < 300.0f;
 
 	if (hand().confidence() > 0.75f && was_closed && !closed_) {
 		if (open_fn_) {

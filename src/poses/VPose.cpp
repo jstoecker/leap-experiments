@@ -1,5 +1,6 @@
 #include "VPose.h"
 #include <algorithm>
+#include "util/ExperimentConfig.h"
 
 using namespace Leap;
 using namespace std;
@@ -10,6 +11,8 @@ VPose::VPose() :
 	open_fn_(nullptr),
 	close_fn_(nullptr)
 {
+    ExperimentConfig cfg;
+    maxSeparation(cfg.getValue("v-pose separation", 30.0f));
 }
 
 bool VPose::shouldEngage(const Leap::Frame& frame)

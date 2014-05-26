@@ -7,11 +7,15 @@
 #include <sstream>
 
 /** Stores/loads configuration values in a file. */
+namespace gl{
+        
 class Config
 {
 public:
     
     virtual ~Config();
+    
+
     
     template <typename T>
     void putValue(const std::string& name, const T& value)
@@ -22,9 +26,9 @@ public:
     }
     
     template <typename T>
-    T getValue(const std::string& name)
+    T getValue(const std::string& name, const T& default_value)
     {
-        T result;
+        T result = default_value;
         std::unordered_map<std::string, std::string>::iterator it = values.find(name);
         if (it != values.end()) {
             std::stringstream ss(it->second);
@@ -37,8 +41,10 @@ public:
     bool load(const std::string& fileName);
     void save(const std::string& fileName);
     
+    
 private:
     std::unordered_map<std::string, std::string> values;
 };
+}
 
 #endif // __medleap_Config__

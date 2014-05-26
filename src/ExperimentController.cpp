@@ -6,6 +6,7 @@
 #include "experiments/PoseExperiment.h"
 #include "experiments/PlaneExperiment.h"
 #include "experiments/MaskExperiment.h"
+#include "util/ExperimentConfig.h"
 #include <GLFW/glfw3.h>
 
 using namespace gl;
@@ -22,7 +23,9 @@ void ExperimentController::init()
 	text_.loadFont("menlo18");
 	text_.hAlign(TextRenderer::HAlign::left);
 	text_.vAlign(TextRenderer::VAlign::bottom);
-
+    
+    ExperimentConfig cfg;
+    
     experiments_.emplace_back(new PoseExperiment(4));
     experiments_.emplace_back(new Cursor2DExperiment({ 0.06f, 0.02f }, 1));
     experiments_.emplace_back(new Cursor3DExperiment({ 0.065f, 0.0375f }, 1));

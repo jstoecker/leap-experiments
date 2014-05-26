@@ -1,7 +1,9 @@
 #include "Config.h"
 #include <fstream>
+#include <iostream>
 
 using namespace std;
+using namespace gl;
 
 Config::~Config()
 {
