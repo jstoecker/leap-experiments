@@ -8,6 +8,7 @@
 #include "gl/Viewport.h"
 #include "gl/util/TextRenderer.h"
 #include "Experiment.h"
+#include <GLFW/glfw3.h>
 
 class ExperimentController
 {
@@ -21,8 +22,11 @@ public:
 	void mouseButton(int button, int action, int mods);
 	void mouseMotion(double x, double y);
 	void mouseScroll(double x, double y);
+    
+    void window(GLFWwindow* window) { window_ = window; }
 
 protected:
+    GLFWwindow* window_;
 	Leap::Controller leap_;
 	gl::Viewport viewport_;
 	TextRenderer text_;

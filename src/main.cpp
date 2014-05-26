@@ -73,6 +73,7 @@ int main(int argc, char** argv)
 		std::cout << "Couldn't initialize OpenGL" << std::endl;
 		return 1;
 	}
+    controller.window(window);
 
 	srand(time(NULL));
 

@@ -88,7 +88,14 @@ void ExperimentController::draw()
         text_.hAlign(TextRenderer::HAlign::right);
         text_.add(is.str(), viewport_.width, 0.0f);
 		text_.draw();
-	}
+	} else {
+        text_.clear();
+        text_.color(0, 0, 0);
+        text_.hAlign(TextRenderer::HAlign::center);
+        text_.vAlign(TextRenderer::VAlign::center);
+        text_.add("Done!", viewport_.center().x, viewport_.center().y);
+        text_.draw();
+    }
 }
 
 void ExperimentController::keyInput(int key, int action, int mods)
@@ -99,6 +106,10 @@ void ExperimentController::keyInput(int key, int action, int mods)
     
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
         startNext();
+    }
+    
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window_, GL_TRUE);
     }
 }
 
