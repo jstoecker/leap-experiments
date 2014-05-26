@@ -16,7 +16,7 @@
 class MaskExperiment : public Experiment
 {
 public:
-	MaskExperiment(std::vector<float>& red_thresholds, std::vector<float>& green_thresholds);
+	MaskExperiment(const std::vector<float>& red_thresholds, const std::vector<float>& green_thresholds);
     std::string name() const override { return "Mask"; }
 	void draw(const gl::Viewport& viewport) override;
 	void leapInput(const Leap::Frame& frame) override;

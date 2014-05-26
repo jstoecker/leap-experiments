@@ -11,7 +11,7 @@ static const GLubyte CLEAR_VOXEL = 0;
 static const GLubyte GREEN_VOXEL = 64;
 static const GLubyte RED_VOXEL = 128;
 
-MaskExperiment::MaskExperiment(std::vector<float>& red_thresholds, std::vector<float>& green_thresholds) :
+MaskExperiment::MaskExperiment(const std::vector<float>& red_thresholds, const std::vector<float>& green_thresholds) :
 Experiment(red_thresholds.size()),
 red_thresholds_(red_thresholds),
 green_thresholds_(green_thresholds),
@@ -85,7 +85,7 @@ void MaskExperiment::leapInput(const Leap::Frame& frame)
 
 void MaskExperiment::slice()
 {
-    slicer_.slice(bounds_, cam_control_.camera(), 0.1f, 64, 128);
+    slicer_.slice(bounds_, cam_control_.camera(), 0.05f, 64, 128);
     
     vbo_.bind();
     vbo_.data(&slicer_.getVertices()[0], slicer_.getVertices().size() * sizeof(Vec3));
@@ -109,6 +109,7 @@ void MaskExperiment::clearMask()
 
 void MaskExperiment::draw(const gl::Viewport& viewport)
 {
+    glDisable(GL_DEPTH_TEST);
 	Camera& camera = cam_control_.camera();
 	camera.aspect(viewport.aspect());
     
@@ -121,7 +122,7 @@ void MaskExperiment::draw(const gl::Viewport& viewport)
     }
     
 	// grid plane
-	drawing_.color(.25f, .25f, .25f);
+	drawing_.color(.85f, .85f, .85f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	drawing_.begin(GL_TRIANGLES);
 	drawing_.setModelViewProj(camera.projection() * camera.view() * translation(0.0f, -0.5f, 0.0f) * scale(2, 2, 2));
@@ -132,14 +133,14 @@ void MaskExperiment::draw(const gl::Viewport& viewport)
     
 	// bounding box
 	drawing_.setModelViewProj(camera.projection() * camera.view());
-	drawing_.color(.45f, .45f, .45f);
+	drawing_.color(.75f, .75f, .75f);
 	drawing_.begin(GL_LINES);
 	drawing_.geometry(bounds_.lines());
 	drawing_.end();
 	drawing_.draw();
     
     // mask box
-	drawing_.color(.45f, .7f, .45f);
+	drawing_.color(.45f, .45f, .45f);
 	drawing_.begin(GL_LINES);
 	drawing_.geometry(box_mask_.geometry());
 	drawing_.end();
@@ -158,9 +159,9 @@ void MaskExperiment::draw(const gl::Viewport& viewport)
     drawing_.draw();
     
     if (poses_.v().isClosed()) {
-        drawing_.color(1.0f, 1.0f, 0.0f);
+        drawing_.color(0, 0, 0);
     } else {
-        drawing_.color(1.0f, 1.0f, 1.0f);
+        drawing_.color(.75f, .75f, .75f);
     }
     drawing_.begin(GL_LINES);
     drawing_.vertex(bounds_.min().x, box_mask_.center().y, box_mask_.center().z);
@@ -222,19 +223,23 @@ void MaskExperiment::draw(const gl::Viewport& viewport)
         ss << "Voxels: ";
         ss << std::fixed << std::setprecision(2);
         ss << (float)red_voxels_remaining_/red_voxels_*100;
+        ss << "%   maximum: ";
+        ss << (float)red_thresholds_[trialsCompleted()]*100;
         ss << "%";
-        text_.color(1, .5f, .5f);
+        text_.color(1, 0, 0);
         text_.add(ss.str(), 0, viewport.height);
         
         ss.str("");
         ss << "Voxels: ";
         ss << std::fixed << std::setprecision(2);
         ss << (float)green_voxels_remaining_/green_voxels_*100;
+        ss << "%   minimum: ";
+        ss << (float)green_thresholds_[trialsCompleted()]*100;
         ss << "%";
-        text_.color(.5f, 1, .5f);
+        text_.color(0, 1, 0);
         text_.add(ss.str(), 0, viewport.height - 20);
         
-        text_.color(1, 1, 1);
+        text_.color(0, 0, 0);
         if (remove_op_) {
             text_.add("Mode: Subtract", 0, viewport.height - 40);
         } else {
@@ -257,7 +262,13 @@ void MaskExperiment::moveCursor()
 
 void MaskExperiment::applyEdit()
 {
-    VolumeEdit edit = box_mask_.sub(bounds_, voxels_.x, voxels_.y, voxels_.z);
+    VolumeEdit edit;
+    if (remove_op_) {
+         edit = box_mask_.sub(bounds_, voxels_.x, voxels_.y, voxels_.z);
+    } else {
+         edit = box_mask_.add(bounds_, voxels_.x, voxels_.y, voxels_.z);
+    }
+    
     if (!edit.weights.empty()) {
         tex_mask_.bind();
         glTexSubImage3D(GL_TEXTURE_3D, 0, edit.x, edit.y, edit.z, edit.w, edit.h, edit.d, GL_RED, GL_UNSIGNED_BYTE, &edit.weights[0]);
@@ -272,15 +283,31 @@ void MaskExperiment::applyEdit()
                     
                     GLubyte prev_mask_value = mask_voxels_[index];
                     
-                    if (prev_mask_value == 0) {
-                        GLubyte voxel_value = volume_voxels_[index];
-                        if (voxel_value == GREEN_VOXEL) {
-                            green_voxels_remaining_--;
-                        } else if (voxel_value == RED_VOXEL) {
-                            red_voxels_remaining_--;
+                    if (remove_op_) {
+                        GLubyte new_mask_value = 255;
+                        if (prev_mask_value != new_mask_value) {
+                            GLubyte voxel_value = volume_voxels_[index];
+                            if (voxel_value == GREEN_VOXEL) {
+                                green_voxels_remaining_--;
+                            } else if (voxel_value == RED_VOXEL) {
+                                red_voxels_remaining_--;
+                            }
                         }
+                        mask_voxels_[index] = new_mask_value;
+                    } else {
+                        GLubyte new_mask_value = 0;
+                        
+                        if (prev_mask_value != new_mask_value) {
+                            GLubyte voxel_value = volume_voxels_[index];
+                            if (voxel_value == GREEN_VOXEL) {
+                                green_voxels_remaining_++;
+                            } else if (voxel_value == RED_VOXEL) {
+                                red_voxels_remaining_++;
+                            }
+                        }
+                        mask_voxels_[index] = new_mask_value;
                     }
-                    mask_voxels_[index] = 255;
+
                     if (trialInProgress() && voxelsGood()) {
                         stopTrial();
                         must_remove_hand_ = true;

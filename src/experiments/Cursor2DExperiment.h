@@ -1,22 +1,23 @@
-#ifndef __LEAP_EXPERIMENTS_CURSOR_H__
-#define __LEAP_EXPERIMENTS_CURSOR_H__
+#ifndef __LEAP_EXPERIMENTS_CURSOR2D_H__
+#define __LEAP_EXPERIMENTS_CURSOR2D_H__
 
 #include "Experiment.h"
 #include "util/CameraControl.h"
 #include "gl/util/Draw.h"
 #include "poses/VPose.h"
+#include "gl/util/TextRenderer.h"
 
-class CursorExperiment : public Experiment
+class Cursor2DExperiment : public Experiment
 {
 public:
-	CursorExperiment(std::vector<float> thresholds, int trials_per_threshold);
+	Cursor2DExperiment(const std::vector<float>& thresholds, int trials_per_threshold);
     std::string name() const override { return "Cursor"; }
 	void draw(const gl::Viewport& viewport) override;
 	void leapInput(const Leap::Frame& frame) override;
 	void mouseButton(int button, int action, int mods) override;
 	void mouseMotion(double x, double y) override;
-	void mouseScroll(double x, double y) override;
-
+    void keyInput(int key, int action, int mods) override;
+    
 protected:
     void initTrial() override;
     void saveTrial() override;
@@ -31,7 +32,7 @@ private:
 
 	struct Polyline
 	{
-		std::vector<gl::Vec3> points;
+		std::vector<gl::Vec2> points;
 	};
 
 	struct Trial
@@ -48,10 +49,11 @@ private:
 	};
 
 	VPose pose_;
+    TextRenderer text_;
 	CameraControl cam_control_;
 	gl::Draw drawing_;
 	Trial trial_;
-	gl::Vec3 cursor_;
+	gl::Vec2 cursor_;
 	gl::Box bounds_;
 	gl::Viewport viewport_;
 	Polyline polyline_;
@@ -64,4 +66,4 @@ private:
 	void illuminatePoint();
 };
 
-#endif // __LEAP_EXPERIMENTS_CURSOR_H__
+#endif // __LEAP_EXPERIMENTS_CURSOR2D_H__

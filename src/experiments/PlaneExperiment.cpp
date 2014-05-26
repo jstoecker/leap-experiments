@@ -1,4 +1,4 @@
-#include "Clip3DExperiment.h"
+#include "PlaneExperiment.h"
 #include "gl/geom/Box.h"
 #include <GLFW/glfw3.h>
 
@@ -7,7 +7,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace Leap;
 
-Clip3DExperiment::Clip3DExperiment(vector<float> thresholds, int trials_per_threshold) :
+PlaneExperiment::PlaneExperiment(const vector<float>& thresholds, int trials_per_threshold) :
 Experiment(trials_per_threshold * thresholds.size()),
 thresholds_{thresholds},
 trials_per_threshold_(trials_per_threshold),
@@ -20,7 +20,7 @@ valid_(false)
 	initTrial();
 }
 
-bool Clip3DExperiment::withinThreshold()
+bool PlaneExperiment::withinThreshold()
 {
     if (user_intersection_.empty())
         return false;
@@ -34,7 +34,7 @@ bool Clip3DExperiment::withinThreshold()
     return max_dist < trial_.threshold;
 }
 
-void Clip3DExperiment::saveTrial()
+void PlaneExperiment::saveTrial()
 {
 	cout << "trial       : " << (trialsCompleted() + 1) << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
@@ -43,7 +43,7 @@ void Clip3DExperiment::saveTrial()
 	cout << "time (ms)   : " << trialTime().count() << endl;
 }
 
-void Clip3DExperiment::initTrial()
+void PlaneExperiment::initTrial()
 {
     trial_.target.normal((Vec3::random().normalize() - 0.5f) * 2.0f);
 	trial_.threshold = thresholds_[trialsCompleted() / trials_per_threshold_];
@@ -52,7 +52,7 @@ void Clip3DExperiment::initTrial()
     valid_ = false;
 }
 
-void Clip3DExperiment::leapInput(const Leap::Frame& frame)
+void PlaneExperiment::leapInput(const Leap::Frame& frame)
 {
     Hand hand = frame.hands().frontmost();
     
@@ -86,7 +86,7 @@ void Clip3DExperiment::leapInput(const Leap::Frame& frame)
     }
 }
 
-void Clip3DExperiment::draw(const gl::Viewport& viewport)
+void PlaneExperiment::draw(const gl::Viewport& viewport)
 {
 	Camera& camera = cam_control_.camera();
 	camera.aspect(viewport.aspect());
@@ -137,4 +137,11 @@ void Clip3DExperiment::draw(const gl::Viewport& viewport)
     drawing_.draw();
     
     glDisable(GL_BLEND);
+}
+
+void PlaneExperiment::keyInput(int key, int action, int mods)
+{
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+        initTrial();
+    }
 }

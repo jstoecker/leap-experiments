@@ -1,5 +1,5 @@
-#ifndef __LEAP_EXPERIMENTS_CLIP3D_H__
-#define __LEAP_EXPERIMENTS_CLIP3D_H__
+#ifndef __LEAP_EXPERIMENTS_PLANE_H__
+#define __LEAP_EXPERIMENTS_PLANE_H__
 
 #include "Experiment.h"
 #include "util/CameraControl.h"
@@ -7,13 +7,14 @@
 #include "gl/geom/Box.h"
 #include "gl/geom/Plane.h"
 
-class Clip3DExperiment : public Experiment
+class PlaneExperiment : public Experiment
 {
 public:
-	Clip3DExperiment(std::vector<float> thresholds, int trials_per_threshold);
+	PlaneExperiment(const std::vector<float>& thresholds, int trials_per_threshold);
     std::string name() const override { return "Clip3D"; }
 	void draw(const gl::Viewport& viewport) override;
 	void leapInput(const Leap::Frame& frame) override;
+    void keyInput(int key, int action, int mods) override;
     
 protected:
     void initTrial() override;
@@ -41,4 +42,4 @@ private:
 	bool withinThreshold();
 };
 
-#endif // __LEAP_EXPERIMENTS_CLIP3D_H__
+#endif // __LEAP_EXPERIMENTS_PLANE_H__

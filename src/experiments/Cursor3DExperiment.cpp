@@ -1,4 +1,4 @@
-#include "CursorExperiment.h"
+#include "Cursor3DExperiment.h"
 #include "gl/geom/Box.h"
 #include "gl/geom/Plane.h"
 #include <GLFW/glfw3.h>
@@ -9,8 +9,8 @@ using namespace std;
 using namespace std::chrono;
 using namespace Leap;
 
-CursorExperiment::CursorExperiment(vector<float> thresholds, int trials_per_threshold) :
-    Experiment(num_inputs * trials_per_threshold * thresholds_.size()),
+Cursor3DExperiment::Cursor3DExperiment(const vector<float>& thresholds, int trials_per_threshold) :
+    Experiment(2 * trials_per_threshold * thresholds.size()),
 	bounds_(1.25f),
 	thresholds_(thresholds),
 	trials_per_threshold_(trials_per_threshold),
@@ -22,26 +22,26 @@ CursorExperiment::CursorExperiment(vector<float> thresholds, int trials_per_thre
 	cam_control_.translationAllowed(false);
 	cam_control_.camera().radius(1.8f);
 	initTrial();
-
-	static const int num_points = 128;
+    
+	static const int num_points = 256;
 	float angle = 0.0f;
 	float angle_step = two_pi / num_points;
 	for (int i = 0; i < num_points; i++) {
-		float x = cos(angle) * .5f + sin(angle*12) * 0.025f;
-		float y = sin(angle) * .5f + cos(angle * 12) * 0.025f;
+		float x = cos(angle) * .5f + sin(angle*12) * 0.0125f;
+		float y = sin(angle) * .5f + cos(angle * 12) * 0.0125f;
 		float z = 0.0f;
-		z = .025f * sin(angle*12);
+		z = .1f * sin(angle*12);
 		polyline_.points.push_back({ x, y, z });
 		angle += angle_step;
 	}
 }
 
-bool CursorExperiment::withinThreshold()
+bool Cursor3DExperiment::withinThreshold()
 {
 	return (cursor_ - polyline_.points[trial_.illuminated]).length() < trial_.threshold;
 }
 
-void CursorExperiment::illuminatePoint()
+void Cursor3DExperiment::illuminatePoint()
 {
 	if (trial_.illuminated < polyline_.points.size()) {
 		trial_.trace.points.push_back(cursor_);
@@ -49,19 +49,19 @@ void CursorExperiment::illuminatePoint()
 	}
 }
 
-void CursorExperiment::saveTrial()
+void Cursor3DExperiment::saveTrial()
 {
 	cout << "trial       : " << (trialsCompleted() + 1) << endl;
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
 	cout << "time (ms)   : " << trialTime().count() << endl;
-	cout << "trace       : " << trial_.trace.points.size() << endl;
+	cerr << "trace       : " << trial_.trace.points.size() << endl;
 	for (const Vec3& v : trial_.trace.points) {
         cout << v << endl;
 	}
 }
 
-void CursorExperiment::initTrial()
+void Cursor3DExperiment::initTrial()
 {
     cursor_.set(0.0f, 0.0f, 0.0f);
 
@@ -69,8 +69,8 @@ void CursorExperiment::initTrial()
 	float pitch = (((double)rand() / ((double)RAND_MAX + 1)) - 0.5f) * 2.0f * 45.0f * deg_to_rad;
 
 	Camera& camera = cam_control_.camera();
-	camera.yaw(33.0f * deg_to_rad);
-	camera.pitch(pitch);
+	camera.yaw(45.0f * deg_to_rad);
+	camera.pitch(0.0f * deg_to_rad);
 
 	trial_.trace.points.clear();
     trial_.camera_pitch = pitch;
@@ -81,7 +81,7 @@ void CursorExperiment::initTrial()
 	trial_.illuminated = 0;
 }
 
-void CursorExperiment::leapInput(const Leap::Frame& frame)
+void Cursor3DExperiment::leapInput(const Leap::Frame& frame)
 {
 	if (trial_.input != leap) {
 		return;
@@ -112,7 +112,7 @@ void CursorExperiment::leapInput(const Leap::Frame& frame)
 	cam_control_.leapInput(frame);
 }
 
-void CursorExperiment::mouseButton(int button, int action, int mods)
+void Cursor3DExperiment::mouseButton(int button, int action, int mods)
 {
 	if (trial_.input != mouse) {
 		return;
@@ -133,7 +133,7 @@ void CursorExperiment::mouseButton(int button, int action, int mods)
 	}
 }
 
-void CursorExperiment::mouseMotion(double x, double y)
+void Cursor3DExperiment::mouseMotion(double x, double y)
 {
 	if (trial_.input != mouse) {
 		return;
@@ -157,7 +157,7 @@ void CursorExperiment::mouseMotion(double x, double y)
 	}
 }
 
-void CursorExperiment::mouseScroll(double x, double y)
+void Cursor3DExperiment::mouseScroll(double x, double y)
 {
 	if (trial_.input != mouse) {
 		return;
@@ -181,10 +181,25 @@ void CursorExperiment::mouseScroll(double x, double y)
 }
 
 
-void CursorExperiment::draw(const gl::Viewport& viewport)
+void Cursor3DExperiment::draw(const gl::Viewport& viewport)
 {
+    static bool first_pass = true;
+	static Draw grid;
+	if (first_pass) {
+		first_pass = false;
+		grid.color(.7f, .7f, .7f, 0.75f);
+		grid.begin(GL_TRIANGLES);
+		grid.geometry(Plane(Vec3::zAxis(), Vec3()).triangles(16, 16));
+		grid.end();
+        
+        text_.loadFont("menlo18");
+	}
+    
 	viewport_ = viewport;
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	grid.draw();
+    
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	Camera& camera = cam_control_.camera();
@@ -219,7 +234,7 @@ void CursorExperiment::draw(const gl::Viewport& viewport)
 	drawing_.draw();
 
 	// vector from cursor to next point
-	drawing_.color(1.0f, 1.0f, 0.5f);
+	drawing_.color(0.0f, 0.0f, 0.0f);
 	drawing_.begin(GL_LINES);
 	if (trial_.illuminated < polyline_.points.size()) {
 		const Vec3& p = polyline_.points[trial_.illuminated];
@@ -230,28 +245,35 @@ void CursorExperiment::draw(const gl::Viewport& viewport)
 	drawing_.draw();
 
 	// cursor sphere
-	drawing_.color(1.0f, 1.0f, 0.5f);
+	drawing_.color(0.0f, 0.0f, 0.0f);
 	drawing_.begin(GL_TRIANGLES);
 	drawing_.geometry(Sphere(cursor_, 0.02f).triangles(8));
 	drawing_.end();
 	drawing_.draw();
 
 	// grid plane
-	static bool first_pass = true;
-	static Draw grid;
-	if (first_pass) {
-		first_pass = false;
-		grid.color(.5f, .5f, .5f, 0.75f);
-		grid.begin(GL_TRIANGLES);
-		grid.geometry(Plane(Vec3::zAxis(), Vec3()).triangles(16, 16));
-		grid.end();
-	}
+
 	grid.setModelViewProj(camera.projection() * camera.view() * scale(1.5f, 1.5f, 1.5f));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	grid.draw();
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	grid.draw();
 
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
+    
+    text_.color(0, 0, 0);
+    text_.hAlign(TextRenderer::HAlign::center);
+    text_.vAlign(TextRenderer::VAlign::top);
+    text_.viewport(viewport);
+    text_.clear();
+    string t = (trial_.input == mouse) ? "Mouse" : "Leap";
+    text_.add("Input: " + t, viewport.center().x, viewport.height);
+    text_.draw();
+}
+
+void Cursor3DExperiment::keyInput(int key, int action, int mods)
+{
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+        trial_.input = (trial_.input == mouse) ? leap : mouse;
+    }
 }

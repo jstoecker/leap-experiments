@@ -63,7 +63,7 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
     view_projection_ = camera.projection() * camera.view();
 
 	// grid plane
-	drawing_.color(.35f, .35f, .35f);
+	drawing_.color(.75f, .75f, .75f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	drawing_.begin(GL_TRIANGLES);
 	drawing_.setModelViewProj(camera.projection() * camera.view() * scale(15, 15, 15));
@@ -76,25 +76,21 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
         drawHand(hand);
     }
     
-    if (valid_pose_) {
-        text_.color(0.5f, 1.0f, 0.5f);
-    } else {
-        text_.color(1.0f, 0.5f, 0.5f);
-    }
-    text_.hAlign(TextRenderer::HAlign::left);
+    text_.color(0, 0, 0);
+    text_.hAlign(TextRenderer::HAlign::center);
     text_.vAlign(TextRenderer::VAlign::top);
     text_.viewport(viewport);
     text_.clear();
-    text_.add("Pose: " + pose_name_, 0, viewport.height);
+    text_.add("Pose: " + pose_name_, viewport.center().x, viewport.height);
     text_.draw();
 }
 
 void PoseExperiment::drawHand(const Hand& hand)
 {
-    Vec4 base_color = (valid_pose_) ? Vec4{1.0f, 1.0f, 0.5f, 1.0f} : Vec4{1.0f, 0.5f, 0.5f, 1.0f};
+    Vec4 base_color = (valid_pose_) ? Vec4{0.8f, 0.8f, 0.4f, 1.0f} : Vec4{0.8f, 0.4f, 0.4f, 1.0f};
     
     if (done_pose_) {
-        base_color = Vec4(0.5f, 1.0f, 0.5f, 1.0f);
+        base_color = Vec4(0.4f, 0.8f, 0.4f, 1.0f);
     }
     
 	prog_.enable();
@@ -104,13 +100,13 @@ void PoseExperiment::drawHand(const Hand& hand)
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
     
 	prog_.uniform("color", base_color);
-	drawJoint(hand.palmPosition(), 2.0f);
+
     
 	for (Finger f : hand.fingers()) {
         
 		Vec4 finger_color = base_color;
 		if (!f.isExtended())
-			finger_color *= 0.5f;
+			finger_color *= 1.5f;
         
 		prog_.uniform("color", finger_color);
         
@@ -121,6 +117,7 @@ void PoseExperiment::drawHand(const Hand& hand)
         
 		drawJoint(f.tipPosition());
 	}
+    	drawJoint(hand.palmPosition(), 2.0f);
     
 	drawing_.setModelViewProj(view_projection_);
 	drawing_.color(base_color.x, base_color.y, base_color.z);

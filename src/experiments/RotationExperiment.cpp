@@ -8,7 +8,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace Leap;
 
-RotationExperiment::RotationExperiment(vector<float> thresholds, int trials_per_threshold) :
+RotationExperiment::RotationExperiment(const vector<float>& thresholds, int trials_per_threshold) :
     Experiment(num_inputs * trials_per_threshold * thresholds.size()),
 	thresholds_{thresholds},
 	trials_per_threshold_(trials_per_threshold),
@@ -54,6 +54,10 @@ void RotationExperiment::initTrial()
 
 	trial_.threshold = thresholds_[(trialsCompleted() % trials_per_input_) / trials_per_threshold_];
 	trial_.input = (Input)(trialsCompleted() / trials_per_input_);
+    
+    
+    arrow_r_ = Vec3::random().normalize().cross(trial_.target).normalize();
+    arrow_u_ = arrow_r_.cross(trial_.target).normalize();
 }
 
 void RotationExperiment::leapInput(const Leap::Frame& frame)
@@ -105,37 +109,69 @@ void RotationExperiment::mouseMotion(double x, double y)
 
 void RotationExperiment::draw(const gl::Viewport& viewport)
 {
+    static bool first = true;
+    if (first) {
+        first = false;
+        text_.loadFont("menlo18");
+    }
+    
 	Camera& camera = cam_control_.camera();
 	camera.aspect(viewport.aspect());
 
 	// grid plane
-	drawing_.color(.15f, .15f, .15f);
+	drawing_.color(.85f, .85f, .85f);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	drawing_.begin(GL_TRIANGLES);
-	drawing_.setModelViewProj(camera.projection() * camera.view() * scale(5, 5, 5));
+	drawing_.setModelViewProj(camera.projection() * camera.view() * scale(10, 10, 10));
 	drawing_.geometry(Plane(Vec3::yAxis(), Vec3()).triangles(32, 32));
 	drawing_.end();
 	drawing_.draw();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	// bounding box
 	drawing_.setModelViewProj(camera.projection() * camera.view());
-	drawing_.color(.25f, .25f, .25f);
-	drawing_.begin(GL_LINES);
-	drawing_.geometry(Box(0.25f).lines());
-	drawing_.vertex(0.0f, 0.0f, 0.0f);
-	drawing_.vertex(0.0f, 0.25f, 0.0f);
-	drawing_.end();
-	drawing_.draw();
 
 	// target vector
 	drawing_.color(trial_.color.x, trial_.color.y, trial_.color.z);
 	drawing_.begin(GL_LINES);
 	drawing_.vertex(0.0f, 0.0f, 0.0f);
 	drawing_.vertex(trial_.target.x, trial_.target.y, trial_.target.z);
+    
+    drawing_.color(.25f, .35f, .25f);
+    drawing_.vertex(0.0f, -10.0f, 0.0f);
+	drawing_.vertex(0.0f, 10.0f, 0.0f);
+    
+    drawing_.color(.35f, .25f, .25f);
+    drawing_.vertex(-10.0f, 0.0f, 0.0f);
+	drawing_.vertex(10.0f, 0.0f, 0.0f);
+    
+    drawing_.color(.25f, .25f, .35f);
+    drawing_.vertex(0.0f, 0.0f, -10.0f);
+	drawing_.vertex(0.0f, 0.0f, 10.0f);
 	drawing_.end();
 	drawing_.draw();
+    
+    
+    // arrow
+    glEnable(GL_DEPTH_TEST);
 
+    int num_pts = 12;
+    Vec3 c = trial_.target;
+    Mat4 rot = rotation(two_pi / num_pts, trial_.target);
+    Vec3 u = arrow_r_;
+    drawing_.color(trial_.color.x, trial_.color.y, trial_.color.z);
+    drawing_.begin(GL_TRIANGLE_FAN);
+    drawing_.vertex(c.x, c.y, c.z);
+    drawing_.color(trial_.color.x * .5f, trial_.color.y * .5f, trial_.color.z * .5f);
+    for (int i = 0; i <= num_pts; i++) {
+        Vec3 p = c * .9f + u * 0.025;
+        drawing_.vertex(p.x, p.y, p.z);
+        u = rot * Vec4(u, 0);
+    }
+    drawing_.end();
+    drawing_.draw();
+    glDisable(GL_DEPTH_TEST);
+
+    
 	// 2D status circle
 	if (trialInProgress()) {
 		if (withinThreshold()) {
@@ -149,4 +185,22 @@ void RotationExperiment::draw(const gl::Viewport& viewport)
 		drawing_.end();
 		drawing_.draw();
 	}
+    
+    text_.color(0, 0, 0);
+    text_.hAlign(TextRenderer::HAlign::center);
+    text_.vAlign(TextRenderer::VAlign::top);
+    text_.viewport(viewport);
+    text_.clear();
+    string t = (trial_.input == mouse) ? "Mouse" : "Leap";
+    text_.add("Input: " + t, viewport.center().x, viewport.height);
+    text_.draw();
+    
+
+}
+
+void RotationExperiment::keyInput(int key, int action, int mods)
+{
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+        trial_.input = (trial_.input == mouse) ? leap : mouse;
+    }
 }

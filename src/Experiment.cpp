@@ -26,7 +26,7 @@ void Experiment::start()
 
 void Experiment::stop()
 {
-    std::cout << "Stop Experiment: " << name() << std::endl;
+    std::cout << std::endl;
 }
 
 void Experiment::leapInput(const Leap::Frame& frame)

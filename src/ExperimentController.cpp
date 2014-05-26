@@ -1,10 +1,12 @@
 #include "ExperimentController.h"
 #include <sstream>
 #include "experiments/RotationExperiment.h"
-#include "experiments/CursorExperiment.h"
+#include "experiments/Cursor3DExperiment.h"
+#include "experiments/Cursor2DExperiment.h"
 #include "experiments/PoseExperiment.h"
-#include "experiments/Clip3DExperiment.h"
+#include "experiments/PlaneExperiment.h"
 #include "experiments/MaskExperiment.h"
+#include <GLFW/glfw3.h>
 
 using namespace gl;
 
@@ -21,17 +23,12 @@ void ExperimentController::init()
 	text_.hAlign(TextRenderer::HAlign::left);
 	text_.vAlign(TextRenderer::VAlign::bottom);
 
-    //experiments_.emplace_back(new PoseExperiment(1));
-    
-//	experiments_.emplace_back(new RotationExperiment({ 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad }, 1));
-
-//    experiments_.emplace_back(new CursorExperiment({ 0.1f, 0.05f, 0.025f }, 1));
-    
-    //experiments_.emplace_back(new Clip3DExperiment({0.2f, 0.15f, 0.10f}, 5));
-    
-    std::vector<float> rt = {0.80f, 0.95f};
-    std::vector<float> gt = {0.95f, 0.95f};
-    experiments_.emplace_back(new MaskExperiment(rt, gt));
+    experiments_.emplace_back(new PoseExperiment(4));
+    experiments_.emplace_back(new Cursor2DExperiment({ 0.06f, 0.02f }, 1));
+    experiments_.emplace_back(new Cursor3DExperiment({ 0.065f, 0.0375f }, 1));
+    experiments_.emplace_back(new RotationExperiment({ 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad }, 1));
+    experiments_.emplace_back(new PlaneExperiment({0.2f, 0.15f, 0.10f}, 10));
+    experiments_.emplace_back(new MaskExperiment({0.50f, 0.10f}, {0.90f, 0.99f}));
     
 	experiment_ = experiments_.begin();
 	(*experiment_)->start();
@@ -66,6 +63,7 @@ void ExperimentController::update()
 
 void ExperimentController::draw()
 {
+    glClearColor(1, 1, 1, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	viewport_.apply();
 
@@ -77,7 +75,8 @@ void ExperimentController::draw()
 		is << (experiment_ - experiments_.begin()) + 1;
 		is << "/";
 		is << experiments_.size();
-		text_.color(1.0f, 1.0f, 1.0f, 1.0f);
+        text_.hAlign(TextRenderer::HAlign::left);
+		text_.color(0.0f, 0.0f, 0.0, 1.0f);
 		text_.clear();
 		text_.viewport(viewport_);
 		text_.add(is.str(), 0.0f, 0.0f);
@@ -86,7 +85,8 @@ void ExperimentController::draw()
 		is << ((*experiment_)->trialsCompleted() + 1);
 		is << "/";
 		is << (*experiment_)->trialsTotal();
-        text_.add(is.str(), 0.0f, 30.0f);
+        text_.hAlign(TextRenderer::HAlign::right);
+        text_.add(is.str(), viewport_.width, 0.0f);
 		text_.draw();
 	}
 }
@@ -96,6 +96,10 @@ void ExperimentController::keyInput(int key, int action, int mods)
 	if (experiment_ != experiments_.end()) {
 		(*experiment_)->keyInput(key, action, mods);
 	}
+    
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        startNext();
+    }
 }
 
 void ExperimentController::mouseButton(int button, int action, int mods)
