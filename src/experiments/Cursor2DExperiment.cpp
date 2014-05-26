@@ -53,10 +53,10 @@ void Cursor2DExperiment::saveTrial()
 	cout << "input       : " << ((trial_.input == leap) ? "leap" : "mouse") << endl;
 	cout << "threshold   : " << trial_.threshold << endl;
 	cout << "time (ms)   : " << trialTime().count() << endl;
-	cerr << "trace       : " << trial_.trace.points.size() << endl;
-	for (const Vec2& v : trial_.trace.points) {
-        cout << v << endl;
-	}
+//	cout << "trace       : " << trial_.trace.points.size() << endl;
+//	for (const Vec2& v : trial_.trace.points) {
+//        cout << v << endl;
+//	}
 }
 
 void Cursor2DExperiment::initTrial()
