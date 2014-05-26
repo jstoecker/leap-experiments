@@ -11,7 +11,7 @@ class Cursor3DExperiment : public Experiment
 {
 public:
 	Cursor3DExperiment(const std::vector<float>& thresholds, int trials_per_threshold);
-    std::string name() const override { return "Cursor"; }
+    std::string name() const override { return "Cursor 3D"; }
 	void draw(const gl::Viewport& viewport) override;
 	void leapInput(const Leap::Frame& frame) override;
 	void mouseButton(int button, int action, int mods) override;

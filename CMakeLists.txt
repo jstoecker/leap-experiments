@@ -78,21 +78,22 @@ message(STATUS ${LEAP_INCLUDE_DIR})
 
 if (APPLE)
 
-    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCE_AND_RESOURCES})
+    add_executable(${PROJECT_NAME} ${SOURCE_AND_RESOURCES})
+    #add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCE_AND_RESOURCES})
 
     # Copy resources to the right place in the app bundle
-    SET_SOURCE_FILES_PROPERTIES(
-        ${DATA_SHADERS} 
-        PROPERTIES 
-        MACOSX_PACKAGE_LOCATION
-        Resources/shaders
-    )
-    SET_SOURCE_FILES_PROPERTIES(
-        ${DATA_FONTS} 
-        PROPERTIES 
-        MACOSX_PACKAGE_LOCATION
-        Resources/fonts
-    )
+#    SET_SOURCE_FILES_PROPERTIES(
+#        ${DATA_SHADERS} 
+#        PROPERTIES 
+#        MACOSX_PACKAGE_LOCATION
+#        Resources/shaders
+#    )
+#    SET_SOURCE_FILES_PROPERTIES(
+#        ${DATA_FONTS} 
+#        PROPERTIES 
+#        MACOSX_PACKAGE_LOCATION
+#        Resources/fonts
+#    )
 
     # for C++11
     set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")

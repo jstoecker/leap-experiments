@@ -11,7 +11,7 @@ class PlaneExperiment : public Experiment
 {
 public:
 	PlaneExperiment(const std::vector<float>& thresholds, int trials_per_threshold);
-    std::string name() const override { return "Clip3D"; }
+    std::string name() const override { return "Plane"; }
 	void draw(const gl::Viewport& viewport) override;
 	void leapInput(const Leap::Frame& frame) override;
     void keyInput(int key, int action, int mods) override;
