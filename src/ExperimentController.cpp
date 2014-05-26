@@ -29,7 +29,9 @@ void ExperimentController::init()
     
     //experiments_.emplace_back(new Clip3DExperiment({0.2f, 0.15f, 0.10f}, 5));
     
-    experiments_.emplace_back(new MaskExperiment(15, 1));
+    std::vector<float> rt = {0.80f, 0.95f};
+    std::vector<float> gt = {0.95f, 0.95f};
+    experiments_.emplace_back(new MaskExperiment(rt, gt));
     
 	experiment_ = experiments_.begin();
 	(*experiment_)->start();

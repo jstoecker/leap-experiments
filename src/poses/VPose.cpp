@@ -6,12 +6,10 @@ using namespace std;
 
 VPose::VPose() : 
 	closed_(false),
-	max_separation_(25.0f),
+	max_separation_(30.0f),
 	open_fn_(nullptr),
 	close_fn_(nullptr)
 {
-	minValidFrames(5);
-	maxHandEngageSpeed(150.0f);
 }
 
 bool VPose::shouldEngage(const Leap::Frame& frame)
