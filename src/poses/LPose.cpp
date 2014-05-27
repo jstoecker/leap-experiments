@@ -90,7 +90,7 @@ void LPose::track(const Frame& frame)
     float d = (u-v).magnitude();
 
 	bool was_closed = closed_;
-
+    
 	closed_ = (d <= close_separation_);
 
 	if (hand().confidence() > 0.75f && was_closed && !closed_) {

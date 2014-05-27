@@ -26,11 +26,11 @@ void ExperimentController::init()
     
     ExperimentConfig cfg;
     
-    experiments_.emplace_back(new PoseExperiment(4));
+    experiments_.emplace_back(new PoseExperiment(3));
     experiments_.emplace_back(new Cursor2DExperiment({ 0.06f, 0.02f }, 1));
-    experiments_.emplace_back(new Cursor3DExperiment({ 0.065f, 0.0375f }, 1));
-    experiments_.emplace_back(new RotationExperiment({ 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad }, 10));
-    experiments_.emplace_back(new PlaneExperiment({0.2f, 0.15f, 0.10f}, 10));
+    experiments_.emplace_back(new Cursor3DExperiment({0.13f, 0.09f }, 1));
+    experiments_.emplace_back(new RotationExperiment({ 5.0f * deg_to_rad, 2.5f * deg_to_rad, 1.0f * deg_to_rad }, 5));
+    experiments_.emplace_back(new PlaneExperiment({0.2f, 0.15f, 0.10f}, 5));
     experiments_.emplace_back(new MaskExperiment({0.50f, 0.10f}, {0.90f, 0.99f}));
     
 	experiment_ = experiments_.begin();

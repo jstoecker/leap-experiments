@@ -24,10 +24,10 @@ protected:
 private:
     enum PoseType
     {
-        V_OPEN,
-        V_CLOSED,
         L_OPEN,
         L_CLOSED,
+        V_OPEN,
+        V_CLOSED,
         CARRY,
         FIST_CLOSED,
         FIST_THUMB,

@@ -53,6 +53,8 @@ private:
     TextRenderer text_;
 	CameraControl cam_control_;
 	gl::Draw drawing_;
+    gl::Draw g_sphere_;
+    gl::Draw r_sphere_;
 	Trial trial_;
 	gl::Vec3 cursor_;
 	gl::Box bounds_;

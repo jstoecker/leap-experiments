@@ -27,10 +27,12 @@ Cursor3DExperiment::Cursor3DExperiment(const vector<float>& thresholds, int tria
 	float angle = 0.0f;
 	float angle_step = two_pi / num_points;
 	for (int i = 0; i < num_points; i++) {
-		float x = cos(angle) * .5f + sin(angle*12) * 0.0125f;
-		float y = sin(angle) * .5f + cos(angle * 12) * 0.0125f;
+        float x = cos(angle) * .55f + sin(angle * 12) * 0.125f;
+		float y = sin(angle) * .55f + cos(angle * 12) * 0.125f;
+//		float x = cos(angle);// * .5f + sin(angle*8) * 0.00325f;
+//		float y = sin(angle);// * .5f + cos(angle * 8) * 0.00325f;
 		float z = 0.0f;
-		z = .1f * sin(angle*12);
+		z = .05f * sin(angle*12);
 		polyline_.points.push_back({ x, y, z });
 		angle += angle_step;
 	}
@@ -192,6 +194,15 @@ void Cursor3DExperiment::draw(const gl::Viewport& viewport)
 		grid.geometry(Plane(Vec3::zAxis(), Vec3()).triangles(16, 16));
 		grid.end();
         
+        g_sphere_.color(0.25f, 1.0f, 0.25f);
+        g_sphere_.begin(GL_TRIANGLES);
+        g_sphere_.geometry(Sphere(Vec3(0.0f, 0.0f, 0.0f), .01).triangles(8));
+        g_sphere_.end();
+        
+        r_sphere_.color(1.0f, 0.25f, 0.25f);
+        r_sphere_.begin(GL_TRIANGLES);
+        r_sphere_.geometry(Sphere(Vec3(0.0f, 0.0f, 0.0f), .01).triangles(8));
+        r_sphere_.end();
         text_.loadFont("menlo18");
 	}
     
@@ -205,6 +216,7 @@ void Cursor3DExperiment::draw(const gl::Viewport& viewport)
 	Camera& camera = cam_control_.camera();
 	camera.aspect(viewport.aspect());
 
+    Mat4 mv = camera.projection() * camera.view();
 	drawing_.setModelViewProj(camera.projection() * camera.view());
 
 	// polyline
@@ -215,23 +227,22 @@ void Cursor3DExperiment::draw(const gl::Viewport& viewport)
 	}
 	drawing_.end();
 	drawing_.draw();
-	glPointSize(8);
-	drawing_.color(0.25f, 1.0f, 0.25f);
-	drawing_.begin(GL_POINTS);
+//	glPointSize(8);
+//	drawing_.color(0.25f, 1.0f, 0.25f);
+//	drawing_.begin(GL_POINTS);
 	for (int i = 0; i < trial_.illuminated; i++) {
 		const Vec3& p = polyline_.points[i];
-		drawing_.vertex(p.x, p.y, p.z);
+        g_sphere_.setModelViewProj(mv * translation(p.x, p.y, p.z));
+        g_sphere_.draw();
 	}
-	drawing_.end();
-	drawing_.draw();
+//	drawing_.end();
+//	drawing_.draw();
 	drawing_.color(1.0f, 0.25f, 0.25f);
-	drawing_.begin(GL_POINTS);
 	for (int i = trial_.illuminated; i < polyline_.points.size(); i++) {
 		const Vec3& p = polyline_.points[i];
-		drawing_.vertex(p.x, p.y, p.z);
+        r_sphere_.setModelViewProj(mv * translation(p.x, p.y, p.z));
+        r_sphere_.draw();
 	}
-	drawing_.end();
-	drawing_.draw();
 
 	// vector from cursor to next point
 	drawing_.color(0.0f, 0.0f, 0.0f);
