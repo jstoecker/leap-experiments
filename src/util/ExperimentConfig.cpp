@@ -10,7 +10,7 @@ ExperimentConfig::ExperimentConfig()
     if (!load(cfg_filename)) {
         std::cout << "Creating default configuration" << std::endl;
         putValue("v-pose separation", 30.0f);
-        putValue("l-pose close angle", 0.3f);
+        putValue("l-pose separation", 35.0f);
         save(cfg_filename);
     }
     load(cfg_filename);

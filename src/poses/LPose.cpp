@@ -10,12 +10,12 @@ LPose::LPose() :
 	last_close_(high_resolution_clock::now()),
 	open_fn_(nullptr),
 	close_fn_(nullptr),
-    close_angle_(0.3f)
+    close_separation_(35.0f)
 {
 	maxHandEngageSpeed(55.0f);
     
     ExperimentConfig cfg;
-    closeAngle(cfg.getValue("l-pose close angle", 0.3f));
+    closeSeparation(cfg.getValue("l-pose separation", 35.0f));
 }
 
 bool LPose::shouldEngage(const Frame& frame)
@@ -47,14 +47,10 @@ bool LPose::shouldEngage(const Frame& frame)
 		return false;
 	}
 
-	Vector u = pointer_.direction();
-	u.y = 0;
-	u = u.normalized();
-	Vector v = thumb_.direction();
-	v.y = 0;
-	v = v.normalized();
-	float angle = u.angleTo(v);
-	if (angle < 0.5f) {
+    Vector u = pointer_.bone(Bone::TYPE_PROXIMAL).prevJoint();
+    Vector v = thumb_.tipPosition();
+    float d = (u-v).magnitude();
+	if (d < close_separation_) {
 		return false;
 	}
 
@@ -89,18 +85,13 @@ void LPose::track(const Frame& frame)
 	pointer_ = frame.finger(pointer_.id());
 	thumb_ = frame.finger(thumb_.id());
 
-	// consider angle in XZ plane only
-	Vector u = pointer_.direction();
-	u.y = 0;
-	u = u.normalized();
-	Vector v = thumb_.direction();
-	v.y = 0;
-	v = v.normalized();
-	float angle = u.angleTo(v);
+    Vector u = pointer_.bone(Bone::TYPE_PROXIMAL).prevJoint();
+    Vector v = thumb_.tipPosition();
+    float d = (u-v).magnitude();
 
 	bool was_closed = closed_;
 
-	closed_ = (angle <= close_angle_) && fingerMotion() < 300.0f;
+	closed_ = (d <= close_separation_);
 
 	if (hand().confidence() > 0.75f && was_closed && !closed_) {
 		if (open_fn_) {

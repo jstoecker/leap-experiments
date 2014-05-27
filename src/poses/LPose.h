@@ -33,7 +33,7 @@ public:
 
 	void clickFn(std::function <void(const Leap::Frame&)> fn) { click_fn_ = fn; }
 
-    void closeAngle(float radians) { close_angle_ = radians; }
+    void closeSeparation(float s) { close_separation_ = s; }
     
 protected:
 	bool shouldEngage(const Leap::Frame& frame) override;
@@ -49,7 +49,7 @@ private:
 	std::function<void(const Leap::Frame&)> open_fn_;
 	std::function<void(const Leap::Frame&)> close_fn_;
 	std::function<void(const Leap::Frame&)> click_fn_;
-    float close_angle_;
+    float close_separation_;
 };
 
 #endif
