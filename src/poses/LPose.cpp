@@ -26,20 +26,13 @@ bool LPose::shouldEngage(const Frame& frame)
 
 	FingerList fingers = hand().fingers();
 
-	thumb_ = fingers[Finger::TYPE_THUMB];
-	if (!thumb_.isExtended()) {
+	Finger thumb = fingers[Finger::TYPE_THUMB];
+	if (!thumb.isExtended() || !thumb.isValid()) {
 		return false;
 	}
 
-	// prefer index finger as pointer over middle finger
-	pointer_ = Finger{};
-	if (fingers[Finger::TYPE_INDEX].isExtended()) {
-		pointer_ = fingers[Finger::TYPE_INDEX];
-	} else if (fingers[Finger::TYPE_MIDDLE].isExtended()) {
-		pointer_ = fingers[Finger::TYPE_MIDDLE];
-	}
-
-	if (!pointer_.isValid()) {
+	Finger index = fingers[Finger::TYPE_INDEX];
+	if (!index.isExtended() || !index.isValid()) {
 		return false;
 	}
 
@@ -47,8 +40,8 @@ bool LPose::shouldEngage(const Frame& frame)
 		return false;
 	}
 
-    Vector u = pointer_.bone(Bone::TYPE_PROXIMAL).prevJoint();
-    Vector v = thumb_.tipPosition();
+    Vector u = index.bone(Bone::TYPE_PROXIMAL).prevJoint();
+    Vector v = thumb.tipPosition();
     float d = (u-v).magnitude();
 	if (d < close_separation_) {
 		return false;
@@ -63,7 +56,8 @@ bool LPose::shouldDisengage(const Frame& frame)
 		return true;
 	}
 
-	if (!pointer_.isValid() || !pointer_.isExtended()) {
+	Finger index = hand().fingers()[Finger::TYPE_INDEX];
+	if (!index.isValid() || !index.isExtended()) {
 		return true;
 	}
 
@@ -82,11 +76,8 @@ bool LPose::shouldDisengage(const Frame& frame)
 
 void LPose::track(const Frame& frame)
 {
-	pointer_ = frame.finger(pointer_.id());
-	thumb_ = frame.finger(thumb_.id());
-
-    Vector u = pointer_.bone(Bone::TYPE_PROXIMAL).prevJoint();
-    Vector v = thumb_.tipPosition();
+    Vector u = hand().fingers()[Finger::TYPE_INDEX].bone(Bone::TYPE_PROXIMAL).prevJoint();
+    Vector v = hand().fingers()[Finger::TYPE_THUMB].tipPosition();
     separation_ = (u-v).magnitude();
 
 	bool was_closed = closed_;
@@ -103,10 +94,17 @@ void LPose::track(const Frame& frame)
 			}
 		}
 	} else if (hand().confidence() > 0.75f && !was_closed && closed_) {
-		pointer_closed_ = pointer_;
 		if (close_fn_) {
 			close_fn_(frame);
 		}
 		last_close_ = high_resolution_clock::now();
 	}
+}
+
+Vector LPose::pointerDelta(bool stabilized) const
+{
+	if (stabilized) {
+		return hand().fingers()[Finger::TYPE_INDEX].stabilizedTipPosition() - handPrevious().fingers()[Finger::TYPE_INDEX].stabilizedTipPosition();
+	}
+	return hand().fingers()[Finger::TYPE_INDEX].tipPosition() - handPrevious().fingers()[Finger::TYPE_INDEX].tipPosition();
 }

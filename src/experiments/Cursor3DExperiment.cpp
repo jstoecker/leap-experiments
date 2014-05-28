@@ -97,8 +97,9 @@ void Cursor3DExperiment::leapInput(const Leap::Frame& frame)
 			}
 
 			const Mat4& eye2world = cam_control_.camera().viewInverse();
-			Vec4 hand_delta_ws = eye2world * pose_.handPositionDelta().toVector4<Vec4>();
-			cursor_ = bounds_.clamp(cursor_ + hand_delta_ws / 200.0f);
+			Vec4 pdelta = pose_.pointerDelta().toVector4<Vec4>();
+			Vec4 hand_delta_ws = eye2world * pdelta;
+			cursor_ = bounds_.clamp(cursor_ + hand_delta_ws / 150.0f);
 
 			if (trial_.illuminated < polyline_.points.size() && withinThreshold()) {
 				illuminatePoint();

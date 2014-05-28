@@ -17,14 +17,6 @@ public:
 	/** Pointer and thumb are together */
 	bool isClosed() const { return closed_; }
 
-	/** Current state of pointer finger (index or middle possibly) */
-	const Leap::Finger& pointer() const { return pointer_; }
-
-	const Leap::Finger& pointerClosed() const { return pointer_closed_; }
-
-	/** Current state of thumb */
-	const Leap::Finger& thumb() const { return thumb_; }
-
 	/** Callback for when fingers separate */
 	void openFn(std::function<void(const Leap::Frame&)> fn) { open_fn_ = fn; }
 
@@ -36,6 +28,8 @@ public:
     void closeSeparation(float s) { close_separation_ = s; }
 
 	float separation() const { return separation_;  }
+
+	Leap::Vector pointerDelta(bool stabilized = false) const;
     
 protected:
 	bool shouldEngage(const Leap::Frame& frame) override;
@@ -45,6 +39,7 @@ protected:
 private:
 	bool closed_;
 	Leap::Finger pointer_;
+	Leap::Finger pointer_prev_;
 	Leap::Finger pointer_closed_;
 	Leap::Finger thumb_;
 	std::chrono::high_resolution_clock::time_point last_close_;
