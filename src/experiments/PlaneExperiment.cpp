@@ -45,7 +45,14 @@ void PlaneExperiment::saveTrial()
 
 void PlaneExperiment::initTrial()
 {
-    trial_.target.normal((Vec3::random().normalize() - 0.5f) * 2.0f);
+	static const float min_altitude = 85.0f * deg_to_rad;
+	Vec3 n;
+	float altitude;
+	do {
+		n = (Vec3::random().normalize() - 0.5f) * 2.0f;
+	} while (abs(n.y) < 0.3f);
+
+    trial_.target.normal(n);
 	trial_.threshold = thresholds_[trialsCompleted() / trials_per_threshold_];
     trial_.target.distFromOrigin(((double) rand() / (RAND_MAX))*0.5f);
     target_intersection_ = bounds_.intersect(trial_.target);
