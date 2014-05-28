@@ -58,10 +58,10 @@ void VPose::track(const Leap::Frame& frame)
 	FingerList fingers = hand().fingers();
 	Finger index = fingers[Finger::TYPE_INDEX];
 	Finger middle = fingers[Finger::TYPE_MIDDLE];
-	float dist = (index.tipPosition() - middle.tipPosition()).magnitude();
+	separation_ = (index.tipPosition() - middle.tipPosition()).magnitude();
 
 	bool was_closed = closed_;
-	closed_ = (dist <= max_separation_);
+	closed_ = (separation_ <= max_separation_);
 
 	if (open_fn_ && was_closed && !closed_) {
 		open_fn_(frame);

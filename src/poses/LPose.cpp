@@ -87,11 +87,10 @@ void LPose::track(const Frame& frame)
 
     Vector u = pointer_.bone(Bone::TYPE_PROXIMAL).prevJoint();
     Vector v = thumb_.tipPosition();
-    float d = (u-v).magnitude();
+    separation_ = (u-v).magnitude();
 
 	bool was_closed = closed_;
-    
-	closed_ = (d <= close_separation_);
+	closed_ = separation_ <= close_separation_;
 
 	if (hand().confidence() > 0.75f && was_closed && !closed_) {
 		if (open_fn_) {

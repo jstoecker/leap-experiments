@@ -4,7 +4,7 @@
 #include "Experiment.h"
 #include "util/CameraControl.h"
 #include "gl/util/Draw.h"
-#include "poses/VPose.h"
+#include "poses/LPose.h"
 #include "gl/util/TextRenderer.h"
 
 class Cursor2DExperiment : public Experiment
@@ -48,7 +48,7 @@ private:
 		int illuminated;
 	};
 
-	VPose pose_;
+	LPose pose_;
     TextRenderer text_;
 	CameraControl cam_control_;
 	gl::Draw drawing_;

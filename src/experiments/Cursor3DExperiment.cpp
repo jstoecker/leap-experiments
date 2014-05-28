@@ -170,6 +170,7 @@ void Cursor3DExperiment::mouseScroll(double x, double y)
 		Vec4 cursor_ndc = cam_control_.camera().projection() * cam_control_.camera().view() * Vec4(cursor_, 1.0f);
 		cursor_ndc /= cursor_ndc.w;
 		cursor_ndc.z += y / 500.0f;
+		cursor_ndc.z = min(max(0.6f, cursor_ndc.z), 0.95f);
 
 		// reproject
 		Vec4 cursor_ws = cam_control_.camera().viewInverse() * cam_control_.camera().projection().inverse() * cursor_ndc;
@@ -258,7 +259,7 @@ void Cursor3DExperiment::draw(const gl::Viewport& viewport)
 	// cursor sphere
 	drawing_.color(0.0f, 0.0f, 0.0f);
 	drawing_.begin(GL_TRIANGLES);
-	drawing_.geometry(Sphere(cursor_, 0.02f).triangles(8));
+	drawing_.geometry(Sphere(cursor_, 0.03f).triangles(3));
 	drawing_.end();
 	drawing_.draw();
 

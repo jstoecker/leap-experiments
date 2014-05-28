@@ -15,6 +15,8 @@ set(DATA_SHADERS
     shaders/color.frag
     shaders/mask_volume.vert
     shaders/mask_volume.frag
+    shaders/texture_2D.vert
+    shaders/texture_2D.frag
 )
 
 set(DATA_FONTS
@@ -22,18 +24,36 @@ set(DATA_FONTS
     fonts/menlo18.dat
 )
 
-foreach(item IN LISTS DATA_SHADERS DATA_FONTS)
+set(DATA_IMAGES
+	images/carry.jpg
+	images/fist.jpg
+	images/fist_thumb.jpg
+	images/l_closed.jpg
+	images/l_open.jpg
+	images/open.jpg
+	images/palms_face.jpg
+	images/point.jpg
+	images/point2.jpg
+	images/three.jpg
+	images/v_closed.jpg
+	images/v_open.jpg
+	images/push.jpg
+	images/pinch.jpg
+)
+
+foreach(item IN LISTS DATA_SHADERS DATA_FONTS DATA_IMAGES)
     add_custom_command(
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${item}" 
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${item}" "${CMAKE_CURRENT_BINARY_DIR}/${item}"
         DEPENDS   "${CMAKE_CURRENT_SOURCE_DIR}/${item}"
     ) 
 endforeach()
-add_custom_target(SHADER_COPY ALL DEPENDS ${DATA_SHADERS} ${DATA_FONTS})
+add_custom_target(SHADER_COPY ALL DEPENDS ${DATA_SHADERS} ${DATA_FONTS} ${DATA_IMAGES})
 
 
 # source group naming for IDEs
 source_group("fonts" FILES ${DATA_FONTS})
+source_group("images" FILES ${DATA_IMAGES})
 source_group("shaders" FILES ${DATA_SHADERS})
 file(GLOB SOURCE_GL src/gl/*.cpp src/gl/*.c src/gl/*.h)
 source_group("gl" FILES ${SOURCE_GL})
@@ -49,7 +69,7 @@ file(GLOB SOURCE_POSES src/poses/*.cpp src/poses/*.h)
 source_group("poses" FILES ${SOURCE_POSES})
 file(GLOB SOURCE_EXPERIMENTS src/experiments/*.cpp src/experiments/*.h)
 source_group("experiments" FILES ${SOURCE_EXPERIMENTS})
-file(GLOB SOURCE_UTIL src/util/*.cpp src/util/*.h)
+file(GLOB SOURCE_UTIL src/util/*.cpp src/util/*.h src/util/*.c)
 source_group("util" FILES ${SOURCE_UTIL})
 
 set(SOURCE_AND_RESOURCES
@@ -63,6 +83,7 @@ set(SOURCE_AND_RESOURCES
     ${SOURCE_UTIL}
     ${DATA_SHADERS}
     ${DATA_FONTS}
+    ${DATA_IMAGES}
 )
 
 # set root of source directory for finding headers

@@ -8,6 +8,7 @@
 #include "gl/Buffer.h"
 #include "poses/PoseTracker.h"
 #include "gl/util/TextRenderer.h"
+#include "gl/Texture.h"
 
 class PoseExperiment : public Experiment
 {
@@ -40,6 +41,9 @@ private:
         num_poses
     };
     
+	std::vector<gl::Texture> pose_textures_;
+	gl::Buffer quad_;
+	gl::Program tex_prog_;
 	CameraControl cam_control_;
 	gl::Draw drawing_;
     bool valid_pose_;
@@ -55,6 +59,7 @@ private:
     TextRenderer text_;
     std::string pose_name_;
     int breaks_;
+	std::vector<std::string> extra_info_;
     std::chrono::high_resolution_clock::time_point start_valid_;
 
     void updatePose();

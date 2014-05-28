@@ -33,7 +33,6 @@ private:
 	{
 		float threshold;
 		gl::Vec3 target;
-		gl::Vec3 color;
 		Input input;
 	};
 

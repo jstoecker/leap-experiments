@@ -93,7 +93,7 @@ void Cursor2DExperiment::leapInput(const Leap::Frame& frame)
 			}
 
 			const Mat4& eye2world = cam_control_.camera().viewInverse();
-			Vec4 hand_delta_ws = eye2world * pose_.handPositionDelta().toVector4<Vec4>();
+			Vec4 hand_delta_ws = eye2world * pose_.handPositionDelta(true).toVector4<Vec4>();
 			cursor_ = cursor_ + hand_delta_ws / 200.0f;
 
 			if (trial_.illuminated < polyline_.points.size() && withinThreshold()) {
@@ -186,21 +186,21 @@ void Cursor2DExperiment::draw(const gl::Viewport& viewport)
 	drawing_.draw();
 	glPointSize(8);
 	drawing_.color(0.25f, 1.0f, 0.25f);
-	drawing_.begin(GL_POINTS);
 	for (int i = 0; i < trial_.illuminated; i++) {
 		const Vec2& p = polyline_.points[i];
-		drawing_.vertex(p.x, p.y);
+		drawing_.begin(GL_TRIANGLE_FAN);
+		drawing_.circle(p.x, p.y, 0.015f, 12);
+		drawing_.end();
+		drawing_.draw();
 	}
-	drawing_.end();
-	drawing_.draw();
 	drawing_.color(1.0f, 0.25f, 0.25f);
-	drawing_.begin(GL_POINTS);
 	for (int i = trial_.illuminated; i < polyline_.points.size(); i++) {
 		const Vec2& p = polyline_.points[i];
-		drawing_.vertex(p.x, p.y);
+		drawing_.begin(GL_TRIANGLE_FAN);
+		drawing_.circle(p.x, p.y, 0.015f, 12);
+		drawing_.end();
+		drawing_.draw();
 	}
-	drawing_.end();
-	drawing_.draw();
 
 	// vector from cursor to next point
 	drawing_.color(0.0f, 0.0f, 0.0f);
@@ -215,8 +215,8 @@ void Cursor2DExperiment::draw(const gl::Viewport& viewport)
 
 	// cursor sphere
 	drawing_.color(0.0f, 0.0f, 0.0f);
-	drawing_.begin(GL_TRIANGLES);
-	drawing_.geometry(Sphere(Vec3(cursor_, 0.0f), 0.02f).triangles(8));
+	drawing_.begin(GL_TRIANGLE_FAN);
+	drawing_.circle(cursor_.x ,cursor_.y, 0.03f, 12);
 	drawing_.end();
 	drawing_.draw();
     

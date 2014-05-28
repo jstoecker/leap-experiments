@@ -1,6 +1,7 @@
 #include "PoseExperiment.h"
 #include "gl/geom/Plane.h"
 #include "gl/geom/Sphere.h"
+#include "util/stb_image.h"
 
 using namespace gl;
 using namespace std;
@@ -27,6 +28,9 @@ void PoseExperiment::saveTrial()
 	cout << "pose        : " << pose_name_ << endl;
     cout << "breaks      : " << breaks_ << endl;
 	cout << "time (ms)   : " << trialTime().count() << endl;
+	for (string& s : extra_info_) {
+		cout << s << endl;
+	}
 }
 
 void PoseExperiment::initTrial()
@@ -34,12 +38,31 @@ void PoseExperiment::initTrial()
     done_pose_ = false;
     valid_pose_ = false;
     breaks_ = 0;
+	extra_info_.clear();
 }
 
 void PoseExperiment::leapInput(const Leap::Frame& frame)
 {
     frame_ = frame;
     updatePose();
+}
+
+Texture loadTexImage(const char* filename)
+{
+	Texture t;
+	int width, height, channels;
+	unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+	if (!data) {
+		cerr << "WARNING: couldn't load " << filename << endl;
+	} else {
+		t.generate(GL_TEXTURE_2D);
+		t.bind();
+		t.setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		t.setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		t.setData2D(GL_RGB, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+	}
+	stbi_image_free(data);
+	return t;
 }
 
 void PoseExperiment::draw(const gl::Viewport& viewport)
@@ -56,6 +79,50 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
         
         prog_ = Program::create("shaders/color.vert", "shaders/color.frag");
         text_.loadFont("menlo18");
+
+		// textures
+
+		//{
+		//	L_OPEN,
+		//		L_CLOSED,
+		//		V_OPEN,
+		//		V_CLOSED,
+		//		CARRY,
+		//		FIST_CLOSED,
+		//		FIST_THUMB,
+		//		FIST_THREE,
+		//		PALMS_FACE,
+		//		PINCH,
+		//		POINT,
+		//		POINT2,
+		//		PUSH,
+		pose_textures_.push_back(loadTexImage("images/l_open.jpg"));
+		pose_textures_.push_back(loadTexImage("images/l_closed.jpg"));
+		pose_textures_.push_back(loadTexImage("images/v_open.jpg"));
+		pose_textures_.push_back(loadTexImage("images/v_closed.jpg"));
+		pose_textures_.push_back(loadTexImage("images/carry.jpg"));
+		pose_textures_.push_back(loadTexImage("images/fist.jpg"));
+		pose_textures_.push_back(loadTexImage("images/fist_thumb.jpg"));
+		pose_textures_.push_back(loadTexImage("images/three.jpg"));
+		pose_textures_.push_back(loadTexImage("images/palms_face.jpg"));
+		pose_textures_.push_back(loadTexImage("images/pinch.jpg"));
+		pose_textures_.push_back(loadTexImage("images/point.jpg"));
+		pose_textures_.push_back(loadTexImage("images/point2.jpg"));
+		pose_textures_.push_back(loadTexImage("images/push.jpg"));
+
+		GLfloat vertices[] = {
+			-0.5f, -0.5f, 0.0f, 0.0f,
+			+0.5f, -0.5f, 1.0f, 0.0f,
+			+0.5f, +0.5f, 1.0f, -1.0f,
+			-0.5f, -0.5f, 0.0f, 0.0f,
+			+0.5f, +0.5f, 1.0f, -1.0f,
+			-0.5f, +0.5f, 0.0f, -1.0f
+		};
+		quad_.generateVBO(GL_STATIC_DRAW);
+		quad_.bind();
+		quad_.data(vertices, sizeof(vertices));
+
+		tex_prog_ = Program::create("shaders/texture_2D.vert", "shaders/texture_2D.frag");
     }
     
 	Camera& camera = cam_control_.camera();
@@ -75,13 +142,23 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
     for (const Hand& hand : frame_.hands()) {
         drawHand(hand);
     }
+
+	tex_prog_.enable();
+	tex_prog_.uniform("mvp", viewport.orthoProjection() * translation(viewport.width - 200, viewport.height - 150, 0) * scale(300, 200, 1));
+	quad_.bind();
+	pose_textures_[(trialsCompleted() / trials_per_pose_)].bind();
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
+	glDrawArrays(GL_TRIANGLES, 0, 6);
     
     text_.color(0, 0, 0);
     text_.hAlign(TextRenderer::HAlign::center);
     text_.vAlign(TextRenderer::VAlign::top);
     text_.viewport(viewport);
     text_.clear();
-    text_.add("Pose: " + pose_name_, viewport.center().x, viewport.height);
+    text_.add("Pose: " + pose_name_, viewport.width - 200, viewport.height - 25);
     text_.draw();
 }
 
@@ -248,7 +325,25 @@ void PoseExperiment::updatePose()
     if (valid_pose_ && was_valid) {
         milliseconds elapsed = duration_cast<milliseconds>(high_resolution_clock::now() - start_valid_);
         if (elapsed.count() > 500) {
+			bool was_done = done_pose_;
             done_pose_ = true;
+
+			if (!was_done) {
+				std::ostringstream ss;
+				switch (pose)
+				{
+				case PoseType::V_CLOSED:
+				case PoseType::V_OPEN:
+					ss << "separation  : " << poses_.v().separation();
+					extra_info_.push_back(ss.str());
+					break;
+				case PoseType::L_CLOSED:
+				case PoseType::L_OPEN:
+					ss << "separation  : " << poses_.l().separation();
+					extra_info_.push_back(ss.str());
+					break;
+				}
+			}
         }
     }
     
