@@ -45,13 +45,21 @@ void PlaneExperiment::saveTrial()
 
 void PlaneExperiment::initTrial()
 {
-	static const float min_altitude = 85.0f * deg_to_rad;
+	static const float min_altitude = 15.0f * deg_to_rad;
 	Vec3 n;
 	float altitude;
 	do {
 		n = (Vec3::random().normalize() - 0.5f) * 2.0f;
-	} while (abs(n.y) < 0.3f);
+        n.normalize();
+        
+        Vec3 projected(n.x, 0.0f, n.z);
+        projected.normalize();
+        
+        altitude = acos(projected.dot(n));
+        
+	} while (altitude < min_altitude);
 
+    
     trial_.target.normal(n);
 	trial_.threshold = thresholds_[trialsCompleted() / trials_per_threshold_];
     trial_.target.distFromOrigin(((double) rand() / (RAND_MAX))*0.5f);

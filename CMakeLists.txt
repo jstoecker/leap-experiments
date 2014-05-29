@@ -27,17 +27,15 @@ set(DATA_FONTS
 set(DATA_IMAGES
 	images/carry.jpg
 	images/fist.jpg
-	images/fist_thumb.jpg
+	images/thumb.jpg
 	images/l_closed.jpg
 	images/l_open.jpg
-	images/open.jpg
 	images/palms_face.jpg
 	images/point.jpg
 	images/point2.jpg
 	images/three.jpg
 	images/v_closed.jpg
 	images/v_open.jpg
-	images/push.jpg
 	images/pinch.jpg
 )
 

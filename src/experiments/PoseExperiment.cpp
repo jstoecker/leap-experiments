@@ -102,13 +102,13 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
 		pose_textures_.push_back(loadTexImage("images/v_closed.jpg"));
 		pose_textures_.push_back(loadTexImage("images/carry.jpg"));
 		pose_textures_.push_back(loadTexImage("images/fist.jpg"));
-		pose_textures_.push_back(loadTexImage("images/fist_thumb.jpg"));
+		pose_textures_.push_back(loadTexImage("images/thumb.jpg"));
 		pose_textures_.push_back(loadTexImage("images/three.jpg"));
 		pose_textures_.push_back(loadTexImage("images/palms_face.jpg"));
 		pose_textures_.push_back(loadTexImage("images/pinch.jpg"));
 		pose_textures_.push_back(loadTexImage("images/point.jpg"));
 		pose_textures_.push_back(loadTexImage("images/point2.jpg"));
-		pose_textures_.push_back(loadTexImage("images/push.jpg"));
+		//pose_textures_.push_back(loadTexImage("images/push.jpg"));
 
 		GLfloat vertices[] = {
 			-0.5f, -0.5f, 0.0f, 0.0f,
@@ -144,7 +144,7 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
     }
 
 	tex_prog_.enable();
-	tex_prog_.uniform("mvp", viewport.orthoProjection() * translation(viewport.width - 200, viewport.height - 150, 0) * scale(300, 200, 1));
+	tex_prog_.uniform("mvp", viewport.orthoProjection() * translation(viewport.width - 150, viewport.height - 150, 0) * scale(200, 200, 1));
 	quad_.bind();
 	pose_textures_[(trialsCompleted() / trials_per_pose_)].bind();
 	glEnableVertexAttribArray(0);
@@ -158,7 +158,7 @@ void PoseExperiment::draw(const gl::Viewport& viewport)
     text_.vAlign(TextRenderer::VAlign::top);
     text_.viewport(viewport);
     text_.clear();
-    text_.add("Pose: " + pose_name_, viewport.width - 200, viewport.height - 25);
+    text_.add("Pose: " + pose_name_, viewport.width - 150, viewport.height - 25);
     text_.draw();
 }
 
@@ -302,10 +302,10 @@ void PoseExperiment::updatePose()
             pose_name_ = "Point - Two Hands";
             valid_pose_ = poses_.point2().tracking();
             break;
-        case PoseType::PUSH:
-            pose_name_ = "Push";
-            valid_pose_ = poses_.push().tracking();
-            break;
+        // case PoseType::PUSH:
+        //     pose_name_ = "Push";
+        //     valid_pose_ = poses_.push().tracking();
+            // break;
         default:
             valid_pose_ = false;
     }

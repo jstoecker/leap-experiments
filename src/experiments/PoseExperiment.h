@@ -37,7 +37,6 @@ private:
         PINCH,
         POINT,
         POINT2,
-        PUSH,
         num_poses
     };
     
